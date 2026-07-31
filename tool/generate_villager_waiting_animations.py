@@ -91,7 +91,7 @@ def reparent_head(root):
     existing = next((node for node in walk(root) if node.get("name") == "Head Rig"), None)
     if existing:
         return existing
-    prefixes = ("Group 14", "Nose -", "Ears -", "Hair -", "Hat -", "Facial Hair -")
+    prefixes = ("Group 14", "Nose -", "Ears -", "Hair -", "Hat -", "Horns -", "Facial Hair -")
     members = [node for node in root["children"] if node.get("name", "").startswith(prefixes)]
     assert any(node.get("name") == "Group 14" for node in members)
     inverse = np.eye(4)

@@ -34,7 +34,7 @@ EXPORT_DIR = ROOT / "bdengine" / "characters" / "villagers" / "custom"
 ACTION_SPECS = {f"{category.removesuffix('s')}_{name}": (category, name, profile)
                 for category, name, profile in specifications()}
 BUILD_LOCK = threading.Lock()
-PREVIEW_KEYS = ("eyebrows", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "scaleHead", "headScale")
+PREVIEW_KEYS = ("eyebrows", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "horns", "bodyType", "outfit", "accessory", "scale", "scaleMode", "scaleHead", "headScale")
 LAST_PREVIEW = None
 DEFAULT_HEIGHT = 1.9
 ADULT_HEIGHTS = {"female": 1.8, "male": 2.05}
@@ -53,6 +53,7 @@ COMPONENT_IMPORTS = {
     "nose": ("heads/noses", "villager_nose_", "Nose -", "nose"),
     "hair": ("hair", "villager_hair_", "Hair -", "hair"),
     "hat": ("headwear/custom", "villager_hat_", "Hat -", "hat"),
+    "horns": ("headwear/horns/custom", "villager_horns_", "Horns -", "horns"),
     "beard": ("facial_hair/beards", "villager_beard_", "Facial Hair -", "facialHair"),
     "moustache": ("facial_hair/moustaches", "villager_moustache_", "Facial Hair -", "facialHair"),
     "outfit": ("clothing/outfits", "villager_outfit_", "Body Structure", "outfit"),
@@ -100,7 +101,7 @@ def catalog():
             "eyebrows": "thin" if gender == "female" else "thick",
             "nose": nose, "ears": ears, "hair": hair, "hairColor": hair_color,
             "skinColor": "#ECB880", "pupilColor": "#424039",
-            "facialHair": facial_hair or "", "hat": hat or "", "bodyType": body_type, "outfit": outfit,
+            "facialHair": facial_hair or "", "hat": hat or "", "horns": "", "bodyType": body_type, "outfit": outfit,
             "accessory": accessory or "", "waiting": waiting, "talking": talking,
             "walking": walking, "emotions": list(emotions),
             "actions": list(dict.fromkeys(COMMON + extra)),
@@ -115,6 +116,7 @@ def catalog():
             "hair": ["bald", *stems(villagers / "hair", "villager_hair_")],
             "facialHair": sorted(facial),
             "hat": stems(villagers / "headwear", "villager_hat_"),
+            "horns": stems(villagers / "headwear" / "horns", "villager_horns_"),
             "outfit": outfits,
             "accessory": stems(villagers / "accessories", "villager_accessory_"),
             "bodyType": [*BODY_TYPES, *sorted(custom_bodies)],
@@ -159,6 +161,7 @@ def validate(config):
         "hair": choice(config, "hair", components["hair"]),
         "facialHair": choice(config, "facialHair", components["facialHair"], True),
         "hat": choice(config, "hat", components["hat"], True),
+        "horns": choice(config, "horns", components["horns"], True),
         "bodyType": choice(config, "bodyType", components["bodyType"]),
         "outfit": choice(config, "outfit", components["outfit"]),
         "accessory": choice(config, "accessory", components["accessory"], True),
@@ -242,7 +245,7 @@ def apply_scale(root, height, mode, scale_head, head_scale, dimensions):
 def compose(config, animated=True):
     model = (config["nose"], config["ears"], config["hair"], config["hairColor"],
              config["facialHair"], config["hat"], config["outfit"], config["accessory"])
-    root = build(config["name"], model, config["skinColor"], config["bodyType"], config["pupilColor"])[0]
+    root = build(config["name"], model, config["skinColor"], config["bodyType"], config["pupilColor"], config["horns"])[0]
     dimensions = anatomy(root)
     eyebrows(root, config["eyebrows"])
     if animated:
@@ -470,12 +473,16 @@ def self_test():
     legacy_face.pop("eyebrows")
     assert validate(legacy_face)["eyebrows"] == "thin"
     assert set(CATALOG["components"]["eyebrows"]) == set(EYEBROWS)
+    assert {"short", "long", "curved", "ram"} <= set(CATALOG["components"]["horns"])
     for style in EYEBROWS:
         face = compose(validate({**sample, "eyebrows": style, "hair": "bald", "facialHair": "", "hat": ""}), animated=False)
         brow_counts = [len(next(node for node in walk(face) if node.get("name") == name)["children"])
                        for name in ("Group 17", "Group 18")]
         expected = {"none": [0, 0], "arched": [3, 3], "bushy": [2, 2]}.get(style, [1, 1])
         assert brow_counts == expected
+    horned = compose(validate({**sample, "horns": "short"}), animated=False)
+    head_rig = next(node for node in walk(horned) if node.get("name") == "Head Rig")
+    assert any(node.get("name") == "Horns - short" for node in head_rig["children"])
     assert root["editorAnimationCount"] == len(root["listAnim"]) == 21
     assert [animation["name"] for animation in root["listAnim"][:3]] == ["waiting", "talking", "walking"]
     assert CATALOG["components"]["hair"][0] == "bald"

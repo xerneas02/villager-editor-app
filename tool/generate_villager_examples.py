@@ -16,6 +16,7 @@ from generate_villager_ears import EAR_DIR, original_ears
 from generate_villager_faces import find
 from generate_villager_hair import HAIR_DIR, HEAD_DIR, STYLES as HAIR_STYLES, build as build_hair, texture, tint
 from generate_villager_hats import HATS, build as build_hat
+from generate_villager_horns import HORN_DIR
 from generate_villager_noses import NOSE_DIR
 from preview_bdengine import load, render, url_texture
 
@@ -166,7 +167,7 @@ def facial_source(style):
     return FACIAL_DIR / "beards" / f"villager_beard_{style}.bdengine"
 
 
-def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#424039"):
+def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#424039", horns=None):
     nose, ears, hair, hair_color, facial, hat, outfit, accessory = preset
     nose_source = load(NOSE_DIR / f"villager_nose_{nose}.bdengine")
     if nose_source.get("customComponent", {}).get("category") == "nose":
@@ -239,6 +240,10 @@ def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#4240
                         load(library_file(ROOT / "bdengine" / "characters" / "villagers" / "headwear", "villager_hat_", hat)))
             merge_groups(root, headwear, groups(headwear, "Hat -"))
 
+    if horns:
+        horn_source = load(library_file(HORN_DIR, "villager_horns_", horns))
+        merge_groups(root, horn_source, groups(horn_source, "Horns -"))
+
     if hair == "bald":
         color_eyebrows(root, hair_color)
 
@@ -255,7 +260,7 @@ def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#4240
         "nose": nose, "ears": ears, "hair": hair, "facialHair": facial,
         "hat": hat, "outfit": outfit, "accessory": accessory, "skinColor": skin_color,
         "bodyType": selected_body,
-        "pupilColor": pupil_color,
+        "pupilColor": pupil_color, "horns": horns,
     }
     return [root]
 

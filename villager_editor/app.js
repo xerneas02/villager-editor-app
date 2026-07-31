@@ -1,6 +1,6 @@
 const $ = (selector) => document.querySelector(selector);
 const state = { catalog: null, gender: "female", role: "farmer", previewTimer: null, request: 0 };
-const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking"];
+const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "horns", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking"];
 
 function label(value) {
   const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", unibrow: "Monosourcil", none: "Aucun" };
@@ -208,6 +208,7 @@ function randomize() {
   $("#outfit").value = pick(monster ? rules.monsterOutfits : genderedOutfits);
   $("#facialHair").value = Math.random() < (monster ? .2 : state.gender === "male" ? .55 : .05) ? pick(c.facialHair) : "";
   $("#hat").value = Math.random() < (monster ? .15 : .55) ? pick(c.hat) : "";
+  $("#horns").value = Math.random() < (monster ? .35 : .03) ? pick(c.horns) : "";
   $("#accessory").value = Math.random() < (monster ? .35 : .6) ? pick(c.accessory) : "";
   $("#hairColor").value = pick(["#3e3028", "#6c3f28", "#8b5c3e", "#a4825d", "#c49a58", "#e0c58d"]);
   $("#skinColor").value = pick(monster
@@ -235,7 +236,7 @@ function randomize() {
 async function start() {
   const response = await fetch("/api/catalog");
   state.catalog = await response.json();
-  Object.entries(state.catalog.components).forEach(([id, values]) => fillSelect(id, values, ["facialHair", "hat", "accessory"].includes(id)));
+  Object.entries(state.catalog.components).forEach(([id, values]) => fillSelect(id, values, ["facialHair", "hat", "horns", "accessory"].includes(id)));
   ["waiting", "talking", "walking"].forEach(id => fillSelect(id, state.catalog.animations[id]));
   fillSelect("preset", Object.keys(state.catalog.presets));
   checks($("#emotions"), state.catalog.animations.emotions, "emotion");
@@ -252,7 +253,7 @@ async function start() {
   applyPreset("mira_farmer");
 
   $("#preset").addEventListener("change", event => applyPreset(event.target.value));
-  ["nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory"]
+  ["nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "horns", "bodyType", "outfit", "accessory"]
     .forEach(id => $("#" + id).addEventListener("change", () => schedulePreview()));
   $("#scale").addEventListener("input", () => { updateScaleLabel(); schedulePreview(); });
   $("#headScale").addEventListener("input", () => { updateHeadScale(); schedulePreview(); });
