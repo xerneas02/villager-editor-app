@@ -71,7 +71,7 @@ COMPONENT_IMPORTS = {
 
 
 def stems(folder, prefix):
-    return sorted(path.stem.removeprefix(prefix) for path in folder.rglob("*.bdengine"))
+    return sorted(path.stem.removeprefix(prefix) for path in folder.rglob(f"{prefix}*.bdengine"))
 
 
 def catalog():
@@ -544,6 +544,9 @@ def self_test():
             CATALOG["presets"]["goblin_raider"]["walking"]) == ("idiot", "monster", "monster")
     assert {"buzz_cut", "mohawk", "afro", "dreadlocks", "ponytail", "pigtails", "bun", "double_buns"} <= set(CATALOG["components"]["hair"])
     assert {"stubble", "moustache_stubble"} <= set(CATALOG["components"]["facialHair"])
+    assert all(any((ROOT / "bdengine" / "characters" / "villagers" / "headwear").rglob(f"villager_hat_{name}.bdengine"))
+               for name in CATALOG["components"]["hat"])
+    assert not any(name.startswith("villager_horns_") for name in CATALOG["components"]["hat"])
     assert CATALOG["components"]["hair"][0] == "bald"
     assert {"monster_raider", "monster_shaman", "monster_warrior",
             "knight_plate", "knight_noble", "knight_black"} <= set(CATALOG["components"]["outfit"])

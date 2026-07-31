@@ -67,7 +67,10 @@ def merge_groups(target, source, selected):
 
 
 def library_file(folder, prefix, name):
-    return next(folder.rglob(f"{prefix}{name}.bdengine"))
+    path = next(folder.rglob(f"{prefix}{name}.bdengine"), None)
+    if path is None:
+        raise ValueError(f"Composant introuvable : {name}")
+    return path
 
 
 def replace_body(target, source):
