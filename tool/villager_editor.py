@@ -364,10 +364,11 @@ def self_test():
     assert root["editorAnimationCount"] == len(root["listAnim"]) == 21
     assert [animation["name"] for animation in root["listAnim"][:3]] == ["waiting", "talking", "walking"]
     assert CATALOG["components"]["hair"][0] == "bald"
-    assert {"monster_scraps", "monster_raider", "monster_shaman"} <= set(CATALOG["components"]["outfit"])
+    assert {"monster_raider", "monster_shaman", "monster_warrior"} <= set(CATALOG["components"]["outfit"])
+    assert {"goblin", "orc", "brute"} <= set(CATALOG["components"]["bodyType"])
     assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash"} <= set(ACTION_SPECS)
-    assert compose(validate({**CATALOG["presets"]["mira_farmer"], "outfit": "monster_scraps",
-                             "bodyType": "sturdy", "hair": "bald", "hat": "", "facialHair": "",
+    assert compose(validate({**CATALOG["presets"]["mira_farmer"], "outfit": "monster_warrior",
+                             "bodyType": "brute", "hair": "bald", "hat": "", "facialHair": "",
                              "accessory": ""}), animated=False)
     assert slug("Élise du Pont") == "elise_du_pont"
     print("Villager editor self-test passed")

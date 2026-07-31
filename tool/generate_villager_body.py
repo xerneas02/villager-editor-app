@@ -32,6 +32,15 @@ BODY_TYPES = {
     "compact": dict(chest=.76, depth=.40, waist=.68, pelvis=.70, shoulder=.47,
                     arm=.24, forearm=.20, hand=.21, hip=.47, leg=.28, lower=.25, foot=.29,
                     chest_y=.94, chest_h=.62, waist_y=.64, pelvis_y=.49),
+    "goblin": dict(chest=.64, depth=.38, waist=.58, pelvis=.62, shoulder=.42,
+                   arm=.22, forearm=.18, hand=.20, hip=.43, leg=.25, lower=.22, foot=.27,
+                   chest_y=.93, chest_h=.62, waist_y=.63, pelvis_y=.48),
+    "orc": dict(chest=.92, depth=.48, waist=.80, pelvis=.78, shoulder=.55,
+                arm=.30, forearm=.25, hand=.27, hip=.49, leg=.31, lower=.28, foot=.34,
+                chest_y=.96, chest_h=.58, waist_y=.66, pelvis_y=.52),
+    "brute": dict(chest=1.02, depth=.52, waist=.90, pelvis=.86, shoulder=.60,
+                  arm=.34, forearm=.28, hand=.30, hip=.46, leg=.34, lower=.30, foot=.37,
+                  chest_y=.94, chest_h=.62, waist_y=.63, pelvis_y=.49),
 }
 
 

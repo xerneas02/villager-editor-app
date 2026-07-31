@@ -49,9 +49,9 @@ PRESETS = {
     "well_dressed_f": ("slender", "fitted_bodice", "noble_skirt", "common"),
     "traveler_m": ("slender", "sleeveless_surcoat", "leggings", "hunter"),
     "traveler_f": ("slender", "belted_tunic", "long_skirt", "hunter"),
-    "monster_scraps": ("sturdy", "bare_chest", "hide_loincloth", "monster"),
-    "monster_raider": ("heroic", "bare_strapped", "hide_loincloth", "monster"),
-    "monster_shaman": ("slender", "bare_strapped", "hide_wrap", "monster"),
+    "monster_raider": ("orc", "bare_strapped", "hide_loincloth", "monster"),
+    "monster_shaman": ("goblin", "bare_strapped", "hide_wrap", "monster"),
+    "monster_warrior": ("brute", "hide_tunic", "hide_loincloth", "monster"),
 }
 
 
@@ -97,7 +97,7 @@ def make_top(style, profile):
     front = -.22 - d / 2 - .035
     bottom = profile["chest_y"] - profile["chest_h"] / 2
 
-    if style in ("bare_chest", "bare_strapped"):
+    if style in ("bare_strapped", "hide_tunic"):
         result = base_top(profile, sleeves="long")
         for side, sign in (("left_arm", -1), ("right_arm", 1)):
             result[side].append(spec(
@@ -107,9 +107,22 @@ def make_top(style, profile):
             ))
         if style == "bare_strapped":
             result["Torso"].extend([
-                spec("hide_shoulder_strap", (-.08, .99, front - .04), (.12, .55, .06), "leather", (0, 0, -24)),
                 spec("hide_belt", (0, bottom + .03, front - .02), (profile["waist"] + .12, .11, .06), "secondary"),
             ])
+        else:
+            result["Torso"].extend([
+                spec("hide_tunic", (0, profile["chest_y"], front),
+                     (profile["chest"] + .06, profile["chest_h"] + .04, .07), "secondary"),
+                spec("hide_tunic_collar", (0, 1.17, front - .04), (.28, .11, .05), "trim"),
+                spec("hide_tunic_belt", (0, bottom + .03, front - .03),
+                     (profile["waist"] + .14, .12, .07), "leather"),
+            ])
+            for side, sign in (("left_arm", -1), ("right_arm", 1)):
+                result[side].append(spec(
+                    f"{side}_hide_sleeve", (sign * .01, -.15, 0),
+                    (profile["arm"] + .10, .37, profile["depth"] * .78 + .07), "secondary",
+                    (0, 0, sign * -4),
+                ))
         return result
 
     if style == "plain_tunic":
@@ -330,8 +343,10 @@ def hide_bottom(profile, style):
     result = {"Torso": [
         spec("hide_waist", (0, .57, -.22), (profile["pelvis"] + .12, .15, profile["depth"] + .08), "leather"),
         spec("hide_front", (0, .37, front), (profile["pelvis"] * .55, .35, .075), "secondary"),
-        spec("hide_front_ragged_left", (-.13, .17, front), (.18, .14, .075), "secondary"),
-        spec("hide_front_ragged_right", (.12, .20, front), (.20, .20, .075), "secondary"),
+        spec("hide_front_ragged_left", (-.13, .5075, front), (.18, .14, .075), "secondary"),
+        spec("hide_front_ragged_right", (.125, .5075, front), (.18, .14, .075), "secondary"),
+        spec("hide_back", (0, .545, -.22 + profile["depth"] / 2 + .06),
+             (profile["pelvis"] * 1.10, .70 if style == "hide_wrap" else .45, .075), "secondary"),
     ], "left_leg": [], "right_leg": []}
     hip = profile["hip"]
     thigh_y = (.25 + hip + .03) / 2 - hip
@@ -358,7 +373,7 @@ TOPS = {
         "hunter_jerkin", "guard_gambeson", "noble_doublet", "noble_bodice",
         "plain_tunic", "belted_tunic", "long_blouse", "fitted_bodice",
         "laced_tunic", "sleeveless_surcoat",
-        "bare_chest", "bare_strapped",
+        "bare_strapped", "hide_tunic",
     )
 }
 
