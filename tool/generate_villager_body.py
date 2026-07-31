@@ -41,6 +41,10 @@ BODY_TYPES = {
     "brute": dict(chest=1.02, depth=.52, waist=.90, pelvis=.86, shoulder=.60,
                   arm=.34, forearm=.28, hand=.30, hip=.46, leg=.34, lower=.30, foot=.37,
                   chest_y=.94, chest_h=.62, waist_y=.63, pelvis_y=.49),
+    "chubby": dict(chest=.84, depth=.52, waist=.86, pelvis=.82, shoulder=.51,
+                   arm=.28, forearm=.23, hand=.24, hip=.50, leg=.31, lower=.28, foot=.33,
+                   chest_y=.96, chest_h=.54, waist_y=.67, pelvis_y=.53,
+                   belly=.94, belly_depth=.66),
 }
 
 
@@ -81,6 +85,11 @@ def build(source, skin, tunic, trousers, boots, body_type="standard"):
         ("waist", (0, profile["waist_y"], -.22), (profile["waist"], .18, profile["depth"] - .04), (0, 0, 0), "shadow"),
         ("pelvis", (0, profile["pelvis_y"], -.22), (profile["pelvis"], .18, profile["depth"] - .02), (0, 0, 0), "trousers"),
     ]
+    if profile.get("belly"):
+        core_specs.extend([
+            ("upper_belly", (0, .78, -.27), (profile["belly"] * .90, .24, profile["belly_depth"] * .90), (0, 0, 0), "tunic"),
+            ("lower_belly", (0, .62, -.29), (profile["belly"], .22, profile["belly_depth"]), (0, 0, 0), "tunic"),
+        ])
 
     arms = []
     for side, sign in (("left", -1), ("right", 1)):
@@ -122,7 +131,7 @@ def write(source, output, skin, tunic, trousers, boots, body_type="standard"):
     body = decoded["children"][-1]
     assert body["name"] == "Body Structure"
     assert [child["name"] for child in body["children"]] == ["Torso", "left_arm", "right_arm", "left_leg", "right_leg"]
-    assert sum(len(child["children"]) for child in body["children"]) == 18
+    assert sum(len(child["children"]) for child in body["children"]) == 18 + (2 if BODY_TYPES[body_type].get("belly") else 0)
     assert decoded["bodyStructure"] == f"{body_type}_v1"
 
 

@@ -34,6 +34,7 @@ GOBLIN_RAIDER = ("villain_threaten", "villain_evil_laugh", "villain_intimidate",
 
 APPEARANCE_OVERRIDES = {
     "goblin_raider": {"skinColor": "#424D3D", "pupilColor": "#621609", "bodyType": "goblin"},
+    "chubby_villager": {"bodyType": "chubby"},
 }
 
 # gender, role, model preset, waiting, talking, walking, emotions, extra actions
@@ -63,6 +64,7 @@ POPULATION = {
     "faelar_ranger": ("male", "elven_ranger", ("small", "elf_long", "elven_half_up", "#BCA06C", None, None, "traveler_m", "quiver"), "vigilant", "calm", "brisk", ("fear", "anger", "surprise"), HUNTER),
     "aelwen_healer": ("female", "elven_healer", ("small", "elf_short", "elven_cascade", "#E0C58D", None, "pointed_cap", "well_dressed_f", "amulet"), "calm", "storyteller", "neutral", ("joy", "sadness", "fear"), CLERGY),
     "goblin_raider": ("male", "goblin_raider", ("upturned", "elf_long", "bald", "#4D2E1F", None, None, "monster_raider", "sword_scabbard"), "nervous", "excited", "cautious", ("anger", "fear", "surprise"), GOBLIN_RAIDER),
+    "chubby_villager": ("male", "chubby", ("broad", "rounded", "short_heroic", "#6B4A35", "moustache_walrus", None, "common_m", "belt_pouch"), "calm", "lively", "heavy", ("joy", "surprise", "fear"), TRADER),
 }
 
 

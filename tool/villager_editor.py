@@ -366,7 +366,7 @@ def self_test():
     assert [animation["name"] for animation in root["listAnim"][:3]] == ["waiting", "talking", "walking"]
     assert CATALOG["components"]["hair"][0] == "bald"
     assert {"monster_raider", "monster_shaman", "monster_warrior"} <= set(CATALOG["components"]["outfit"])
-    assert {"goblin", "orc", "brute"} <= set(CATALOG["components"]["bodyType"])
+    assert {"goblin", "orc", "brute", "chubby"} <= set(CATALOG["components"]["bodyType"])
     for body_type in ("goblin", "orc", "brute"):
         for _, top, bottom, palette in OUTFIT_PRESETS.values():
             assert build_outfit(body_type, top, bottom, palette)[1] > 0
@@ -374,6 +374,7 @@ def self_test():
     goblin = CATALOG["presets"]["goblin_raider"]
     assert goblin["bodyType"] == "goblin" and goblin["skinColor"] == "#424D3D"
     assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash"} <= set(goblin["actions"])
+    assert CATALOG["presets"]["chubby_villager"]["bodyType"] == "chubby"
     assert compose(validate({**CATALOG["presets"]["mira_farmer"], "outfit": "monster_warrior",
                              "bodyType": "brute", "hair": "bald", "hat": "", "facialHair": "",
                              "accessory": ""}), animated=False)

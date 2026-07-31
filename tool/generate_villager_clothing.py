@@ -68,6 +68,13 @@ def base_top(profile, main="primary", sleeves="long", wide=0):
         "left_arm": [],
         "right_arm": [],
     }
+    if profile.get("belly"):
+        result["Torso"].extend([
+            spec("garment_upper_belly", (0, .78, -.27),
+                 (profile["belly"] * .90 + .045, .255, profile["belly_depth"] * .90 + .045), main),
+            spec("garment_lower_belly", (0, .62, -.29),
+                 (profile["belly"] + .045, .235, profile["belly_depth"] + .045), main),
+        ])
     if sleeves == "none":
         return result
     sleeve_height = .34 if sleeves == "short" else .57
