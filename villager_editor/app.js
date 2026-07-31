@@ -4,7 +4,7 @@ const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinCo
 const pupilLabels = { default: "Carrées", small: "Petites", round: "Rondes voxel", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", large: "Grandes" };
 
 function label(value) {
-  const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", unibrow: "Monosourcil", draconic: "Draconiques", moose: "Élan", reindeer: "Renne", roe_deer: "Chevreuil", unicorn: "Licorne", ogre: "Ogre", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", wolf: "Loup", fox: "Renard", cat: "Chat", deer: "Cerf", rabbit: "Lapin", horse: "Cheval", goat: "Chèvre", dragon: "Dragon", none: "Aucun" };
+  const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", unibrow: "Monosourcil", draconic: "Draconiques", moose: "Élan", reindeer: "Renne", roe_deer: "Chevreuil", unicorn: "Licorne", ogre: "Ogre", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", wolf: "Loup", fox: "Renard", cat: "Chat", deer: "Cerf", rabbit: "Lapin", horse: "Cheval", goat: "Chèvre", dragon: "Dragon", lizard: "Lézard", crocodile: "Crocodile", iguana: "Iguane", serpent: "Serpent", none: "Aucun" };
   if (names[value]) return names[value];
   return value.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -210,7 +210,7 @@ function randomize() {
   $("#outfit").value = pick(monster ? rules.monsterOutfits : genderedOutfits);
   $("#facialHair").value = Math.random() < (monster ? .2 : state.gender === "male" ? .55 : .05) ? pick(c.facialHair) : "";
   $("#hat").value = Math.random() < (monster ? .15 : .55) ? pick(c.hat) : "";
-  const hornTail = { draconic: "dragon", moose: "deer", reindeer: "deer", roe_deer: "deer", ram: "goat", curved: "goat", unicorn: "horse" };
+  const hornTail = { draconic: pick(["dragon", "lizard", "crocodile", "iguana", "serpent"]), moose: "deer", reindeer: "deer", roe_deer: "deer", ram: "goat", curved: "goat", unicorn: "horse" };
   const horn = Math.random() < (monster ? .35 : .03) ? pick(c.horns) : "";
   $("#horns").value = horn;
   const tail = Math.random() < (hornTail[horn] ? .75 : monster ? .2 : .06) ? (hornTail[horn] || pick(c.tail)) : "";

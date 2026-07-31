@@ -489,7 +489,8 @@ def self_test():
     assert set(CATALOG["components"]["pupilStyle"]) == set(PUPILS)
     assert {"short", "long", "curved", "ram", "draconic", "moose", "reindeer", "roe_deer", "unicorn"} <= set(CATALOG["components"]["horns"])
     assert {"none", "cat", "wolf", "fox", "rabbit", "deer", "goat", "horse", "ogre"} <= set(CATALOG["components"]["ears"])
-    assert {"wolf", "fox", "cat", "deer", "rabbit", "horse", "goat", "dragon"} <= set(CATALOG["components"]["tail"])
+    assert {"wolf", "fox", "cat", "deer", "rabbit", "horse", "goat", "dragon",
+            "lizard", "crocodile", "iguana", "serpent"} <= set(CATALOG["components"]["tail"])
     horned_presets = {"varkos_dragonkin", "bryn_moose_warden", "yrsa_reindeer_oracle", "fenn_roe_scout", "maela_faun"}
     assert horned_presets <= set(CATALOG["presets"])
     dragonkin = CATALOG["presets"]["varkos_dragonkin"]

@@ -13,12 +13,16 @@ from preview_bdengine import load
 
 
 TAIL_DIR = VILLAGER_DIR / "tails"
-TAILS = ("wolf", "fox", "cat", "deer", "rabbit", "horse", "goat", "dragon")
-FURRY = set(TAILS) - {"dragon"}
-RIG_SPLITS = {"wolf": 2, "fox": 2, "cat": 2, "horse": 2, "dragon": 3}
+TAILS = ("wolf", "fox", "cat", "deer", "rabbit", "horse", "goat", "dragon",
+         "lizard", "crocodile", "iguana", "serpent")
+REPTILE = {"dragon", "lizard", "crocodile", "iguana", "serpent"}
+FURRY = set(TAILS) - REPTILE
+RIG_SPLITS = {"wolf": 2, "fox": 2, "cat": 2, "horse": 2, "dragon": 3,
+              "lizard": 2, "crocodile": 3, "iguana": 3, "serpent": 3}
 COLORS = {
     "wolf": "#746C62", "fox": "#A95F35", "cat": "#51463F", "deer": "#8A684B",
     "rabbit": "#B8AA96", "horse": "#5C4030", "goat": "#8B806E", "dragon": "#5D5148",
+    "lizard": "#65705A", "crocodile": "#4E5B45", "iguana": "#66764A", "serpent": "#59664A",
 }
 
 
@@ -82,6 +86,51 @@ def specs(style, profile):
             s("middle", (0, y + .12, back + .18), (.16, .17, .17), 0, (-35, 0, 0)),
             s("tip", (0, y + .20, back + .29), (.13, .14, .14), 2, (-42, 0, 0)),
         ]
+    if style == "lizard":
+        return [
+            s("root", (0, y + .02, back + .09), (.25, .20, .26), 1, (28, 0, 0)),
+            s("segment_1", (0, y - .05, back + .29), (.23, .18, .31), 0, (25, 0, 0)),
+            s("segment_2", (0, y - .12, back + .51), (.20, .16, .30), 0, (22, 0, 0)),
+            s("segment_3", (0, y - .18, back + .72), (.16, .14, .28), 0, (18, 0, 0)),
+            s("segment_4", (0, y - .23, back + .91), (.12, .11, .25), 2, (15, 0, 0)),
+            s("tip", (0, y - .26, back + 1.07), (.07, .08, .19), 2, (11, 0, 0)),
+        ]
+    if style == "crocodile":
+        return [
+            s("root", (0, y + .01, back + .09), (.43, .25, .30), 1, (27, 0, 0)),
+            s("segment_1", (0, y - .06, back + .32), (.40, .23, .36), 0, (24, 0, 0)),
+            s("segment_2", (0, y - .14, back + .58), (.34, .20, .36), 0, (21, 0, 0)),
+            s("segment_3", (0, y - .21, back + .83), (.27, .17, .33), 0, (18, 0, 0)),
+            s("segment_4", (0, y - .27, back + 1.04), (.20, .14, .28), 2, (15, 0, 0)),
+            s("tip", (0, y - .31, back + 1.21), (.11, .10, .21), 2, (11, 0, 0)),
+            s("plate_1", (0, y + .12, back + .35), (.14, .16, .13), 2, (-8, 0, 0)),
+            s("plate_2", (0, y + .01, back + .68), (.12, .15, .12), 2, (-4, 0, 0)),
+            s("plate_3", (0, y - .11, back + .96), (.09, .13, .10), 2, (0, 0, 0)),
+        ]
+    if style == "iguana":
+        return [
+            s("root", (0, y + .02, back + .09), (.31, .23, .28), 1, (29, 0, 0)),
+            s("segment_1", (0, y - .05, back + .31), (.29, .21, .34), 0, (26, 0, 0)),
+            s("segment_2", (0, y - .13, back + .55), (.25, .19, .33), 0, (23, 0, 0)),
+            s("segment_3", (0, y - .20, back + .78), (.20, .16, .31), 0, (20, 0, 0)),
+            s("segment_4", (0, y - .26, back + .99), (.15, .13, .27), 2, (16, 0, 0)),
+            s("tip", (0, y - .30, back + 1.16), (.08, .09, .21), 2, (12, 0, 0)),
+            s("spine_1", (0, y + .15, back + .30), (.07, .20, .09), 2, (-10, 0, 0)),
+            s("spine_2", (0, y + .08, back + .55), (.065, .18, .08), 2, (-7, 0, 0)),
+            s("spine_3", (0, y - .01, back + .78), (.055, .15, .07), 2, (-4, 0, 0)),
+            s("spine_4", (0, y - .11, back + .98), (.045, .12, .06), 2, (0, 0, 0)),
+        ]
+    if style == "serpent":
+        return [
+            s("root", (0, y + .02, back + .09), (.20, .18, .26), 1, (27, 0, 0)),
+            s("segment_1", (.04, y - .04, back + .29), (.19, .17, .30), 0, (24, -10, 0)),
+            s("segment_2", (.12, y - .10, back + .50), (.18, .16, .29), 0, (20, -18, 0)),
+            s("segment_3", (.17, y - .15, back + .70), (.16, .14, .27), 0, (17, -7, 0)),
+            s("segment_4", (.12, y - .20, back + .89), (.14, .12, .25), 0, (14, 14, 0)),
+            s("segment_5", (.02, y - .23, back + 1.06), (.11, .10, .22), 2, (11, 22, 0)),
+            s("segment_6", (-.09, y - .25, back + 1.20), (.085, .085, .18), 2, (8, 18, 0)),
+            s("tip", (-.17, y - .26, back + 1.30), (.05, .065, .13), 2, (5, 12, 0)),
+        ]
     if style == "dragon":
         return [
             s("root", (0, y + .03, back + .09), (.34, .27, .29), 1, (29, 0, 0)),
@@ -140,7 +189,8 @@ def animate_tail(root):
         name = animation["name"]
         amplitude = (12 if "walking" in name or any(word in name for word in ("joy", "laugh", "wave"))
                      else 3 if any(word in name for word in ("sleep", "sit", "kneel", "pray")) else 7)
-        amplitude *= {"dragon": .7, "rabbit": .55, "cat": 1.15}.get(style, 1)
+        amplitude *= {"dragon": .7, "crocodile": .55, "iguana": .7,
+                      "rabbit": .55, "cat": 1.15, "lizard": 1.1, "serpent": 1.25}.get(style, 1)
         tail[field] = sway(tail, duration, amplitude)
         if tip:
             tip[field] = sway(tip, duration, amplitude * .7, lagged=True)
