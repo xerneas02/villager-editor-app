@@ -19,6 +19,7 @@ from generate_villager_hats import HATS, build as build_hat
 from generate_villager_horns import HORN_DIR
 from generate_villager_noses import NOSE_DIR
 from generate_villager_tails import FURRY, TAIL_DIR, TAILS, build as build_tail
+from generate_villager_wings import WING_DIR, WINGS, build as build_wings
 from preview_bdengine import load, render, url_texture
 
 
@@ -168,7 +169,7 @@ def facial_source(style):
     return FACIAL_DIR / "beards" / f"villager_beard_{style}.bdengine"
 
 
-def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#424039", horns=None, tail=None):
+def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#424039", horns=None, tail=None, wings=None):
     nose, ears, hair, hair_color, facial, hat, outfit, accessory = preset
     nose_source = load(NOSE_DIR / f"villager_nose_{nose}.bdengine")
     if nose_source.get("customComponent", {}).get("category") == "nose":
@@ -252,6 +253,13 @@ def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#4240
         tail_group = root["children"].pop()
         find(root, "Body Structure")["children"].append(tail_group)
 
+    if wings:
+        wing_source = (build_wings(wings, build_body)[0][0] if wings in WINGS else
+                       load(library_file(WING_DIR, "villager_wings_", wings)))
+        merge_groups(root, wing_source, groups(wing_source, "Wings -"))
+        wing_group = root["children"].pop()
+        find(root, "Body Structure")["children"].append(wing_group)
+
     if hair == "bald":
         color_eyebrows(root, hair_color)
 
@@ -268,7 +276,7 @@ def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#4240
         "nose": nose, "ears": ears, "hair": hair, "facialHair": facial,
         "hat": hat, "outfit": outfit, "accessory": accessory, "skinColor": skin_color,
         "bodyType": selected_body,
-        "pupilColor": pupil_color, "horns": horns, "tail": tail,
+        "pupilColor": pupil_color, "horns": horns, "tail": tail, "wings": wings,
     }
     return [root]
 

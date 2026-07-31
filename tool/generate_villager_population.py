@@ -12,6 +12,7 @@ from generate_villager_examples import build, write
 from generate_villager_faces import find, scale_columns
 from generate_villager_talking_animations import add_animations as add_talking
 from generate_villager_tails import animate_tail
+from generate_villager_wings import animate_wings
 from generate_villager_waiting_animations import add_animations as add_waiting
 from generate_villager_walking_animations import add_animations as add_walking
 from preview_bdengine import render
@@ -38,7 +39,7 @@ GOBLIN_RAIDER = ("villain_threaten", "villain_evil_laugh", "villain_intimidate",
 APPEARANCE_OVERRIDES = {
     "goblin_raider": {"skinColor": "#424D3D", "pupilColor": "#621609", "bodyType": "goblin"},
     "chubby_villager": {"bodyType": "chubby"},
-    "varkos_dragonkin": {"skinColor": "#876D59", "pupilColor": "#C89A3A", "pupilStyle": "vertical_slit", "horns": "draconic", "tail": "dragon", "bodyType": "orc"},
+    "varkos_dragonkin": {"skinColor": "#876D59", "pupilColor": "#C89A3A", "pupilStyle": "vertical_slit", "horns": "draconic", "tail": "dragon", "wings": "dragon", "bodyType": "orc"},
     "bryn_moose_warden": {"pupilColor": "#4C3A29", "pupilStyle": "large", "horns": "moose", "tail": "deer", "bodyType": "sturdy"},
     "yrsa_reindeer_oracle": {"pupilColor": "#53705B", "pupilStyle": "round", "horns": "reindeer", "tail": "deer", "bodyType": "slender"},
     "fenn_roe_scout": {"pupilColor": "#51432F", "pupilStyle": "round", "horns": "roe_deer", "tail": "deer", "bodyType": "compact"},
@@ -173,6 +174,7 @@ def animate(root, waiting, talking, walking, emotions, action_names):
     selected = [catalog[name] for name in dict.fromkeys(COMMON + action_names)]
     add_actions(root, selected)
     animate_tail(root)
+    animate_wings(root)
 
 
 def overview(previews):
@@ -196,7 +198,7 @@ def main():
         appearance = APPEARANCE_OVERRIDES.get(name, {})
         root = build(name, preset, appearance.get("skinColor", "#ECB880"),
                      appearance.get("bodyType"), appearance.get("pupilColor", "#424039"),
-                     appearance.get("horns"), appearance.get("tail"))[0]
+                     appearance.get("horns"), appearance.get("tail"), appearance.get("wings"))[0]
         pupils(root, appearance.get("pupilStyle", "default"))
         if gender == "female":
             thin_eyebrows(root)

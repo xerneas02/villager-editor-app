@@ -21,6 +21,7 @@ from generate_villager_examples import build, write
 from generate_villager_population import APPEARANCE_OVERRIDES, COMMON, EYEBROWS, POPULATION, PUPILS, eyebrows, pupils
 from generate_villager_talking_animations import PERSONALITIES as TALKING, add_animations as add_talking
 from generate_villager_tails import animate_tail
+from generate_villager_wings import animate_wings
 from generate_villager_waiting_animations import (
     PERSONALITIES as WAITING, add_animations as add_waiting, reparent_character, reparent_head,
 )
@@ -35,7 +36,7 @@ EXPORT_DIR = ROOT / "bdengine" / "characters" / "villagers" / "custom"
 ACTION_SPECS = {f"{category.removesuffix('s')}_{name}": (category, name, profile)
                 for category, name, profile in specifications()}
 BUILD_LOCK = threading.Lock()
-PREVIEW_KEYS = ("eyebrows", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "bodyType", "outfit", "accessory", "scale", "scaleMode", "scaleHead", "headScale")
+PREVIEW_KEYS = ("eyebrows", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "wings", "bodyType", "outfit", "accessory", "scale", "scaleMode", "scaleHead", "headScale")
 LAST_PREVIEW = None
 DEFAULT_HEIGHT = 1.9
 ADULT_HEIGHTS = {"female": 1.8, "male": 2.05}
@@ -61,6 +62,7 @@ COMPONENT_IMPORTS = {
     "hat": ("headwear/custom", "villager_hat_", "Hat -", "hat"),
     "horns": ("headwear/horns/custom", "villager_horns_", "Horns -", "horns"),
     "tail": ("tails/custom", "villager_tail_", "Tail -", "tail"),
+    "wings": ("wings/custom", "villager_wings_", "Wings -", "wings"),
     "beard": ("facial_hair/beards", "villager_beard_", "Facial Hair -", "facialHair"),
     "moustache": ("facial_hair/moustaches", "villager_moustache_", "Facial Hair -", "facialHair"),
     "outfit": ("clothing/outfits", "villager_outfit_", "Body Structure", "outfit"),
@@ -108,7 +110,7 @@ def catalog():
             "eyebrows": "thin" if gender == "female" else "thick",
             "nose": nose, "ears": ears, "hair": hair, "hairColor": hair_color,
             "skinColor": "#ECB880", "pupilColor": "#424039", "pupilStyle": "default",
-            "facialHair": facial_hair or "", "hat": hat or "", "horns": "", "tail": "", "bodyType": body_type, "outfit": outfit,
+            "facialHair": facial_hair or "", "hat": hat or "", "horns": "", "tail": "", "wings": "", "bodyType": body_type, "outfit": outfit,
             "accessory": accessory or "", "waiting": waiting, "talking": talking,
             "walking": walking, "emotions": list(emotions),
             "actions": list(dict.fromkeys(COMMON + extra)),
@@ -125,6 +127,7 @@ def catalog():
             "hat": stems(villagers / "headwear", "villager_hat_"),
             "horns": stems(villagers / "headwear" / "horns", "villager_horns_"),
             "tail": stems(villagers / "tails", "villager_tail_"),
+            "wings": stems(villagers / "wings", "villager_wings_"),
             "outfit": outfits,
             "accessory": stems(villagers / "accessories", "villager_accessory_"),
             "bodyType": [*BODY_TYPES, *sorted(custom_bodies)],
@@ -172,6 +175,7 @@ def validate(config):
         "hat": choice(config, "hat", components["hat"], True),
         "horns": choice(config, "horns", components["horns"], True),
         "tail": choice(config, "tail", components["tail"], True),
+        "wings": choice(config, "wings", components["wings"], True),
         "pupilStyle": choice(config, "pupilStyle", PUPILS) if "pupilStyle" in config else "default",
         "bodyType": choice(config, "bodyType", components["bodyType"]),
         "outfit": choice(config, "outfit", components["outfit"]),
@@ -256,7 +260,7 @@ def apply_scale(root, height, mode, scale_head, head_scale, dimensions):
 def compose(config, animated=True):
     model = (config["nose"], config["ears"], config["hair"], config["hairColor"],
              config["facialHair"], config["hat"], config["outfit"], config["accessory"])
-    root = build(config["name"], model, config["skinColor"], config["bodyType"], config["pupilColor"], config["horns"], config["tail"])[0]
+    root = build(config["name"], model, config["skinColor"], config["bodyType"], config["pupilColor"], config["horns"], config["tail"], config["wings"])[0]
     dimensions = anatomy(root)
     eyebrows(root, config["eyebrows"])
     pupils(root, config["pupilStyle"])
@@ -267,6 +271,7 @@ def compose(config, animated=True):
         add_emotions(root, tuple(config["emotions"]))
         add_actions(root, [ACTION_SPECS[name] for name in config["actions"]])
         animate_tail(root)
+        animate_wings(root)
     apply_scale(root, config["scale"], config["scaleMode"], config["scaleHead"], config["headScale"], dimensions)
     root["name"] = config["name"]
     root["editorConfig"] = config
@@ -491,10 +496,11 @@ def self_test():
     assert {"none", "cat", "wolf", "fox", "rabbit", "deer", "goat", "horse", "ogre"} <= set(CATALOG["components"]["ears"])
     assert {"wolf", "fox", "cat", "deer", "rabbit", "horse", "goat", "dragon",
             "lizard", "crocodile", "iguana", "serpent"} <= set(CATALOG["components"]["tail"])
+    assert {"dragon", "bird", "angel", "demonic", "butterfly", "insect"} <= set(CATALOG["components"]["wings"])
     horned_presets = {"varkos_dragonkin", "bryn_moose_warden", "yrsa_reindeer_oracle", "fenn_roe_scout", "maela_faun"}
     assert horned_presets <= set(CATALOG["presets"])
     dragonkin = CATALOG["presets"]["varkos_dragonkin"]
-    assert (dragonkin["horns"], dragonkin["tail"], dragonkin["pupilStyle"]) == ("draconic", "dragon", "vertical_slit")
+    assert (dragonkin["horns"], dragonkin["tail"], dragonkin["wings"], dragonkin["pupilStyle"]) == ("draconic", "dragon", "dragon", "vertical_slit")
     for style in EYEBROWS:
         face = compose(validate({**sample, "eyebrows": style, "hair": "bald", "facialHair": "", "hat": ""}), animated=False)
         brow_counts = [len(next(node for node in walk(face) if node.get("name") == name)["children"])
@@ -519,6 +525,12 @@ def self_test():
     tail_rig = next(node for node in walk(moving_tail) if node.get("name") == "Tail - fox")
     tip_rig = next(node for node in tail_rig["children"] if node.get("name") == "Tail Tip Rig")
     assert tail_rig["tailColor"] == "#345678" and "animation" in tail_rig and "animation" in tip_rig
+    winged = compose(validate({**sample, "wings": "angel"}))
+    wing_group = next(node for node in walk(winged) if node.get("name") == "Wings - angel")
+    wing_rigs = [node for node in walk(wing_group) if node.get("name", "").endswith("Wing Rig")]
+    upper_rig = next(node for node in walk(winged) if node.get("name") == "Upper Body Rig")
+    assert len(wing_rigs) == 4 and all("animation" in rig for rig in wing_rigs)
+    assert any(node is wing_group for node in walk(upper_rig))
     assert root["editorAnimationCount"] == len(root["listAnim"]) == 21
     assert [animation["name"] for animation in root["listAnim"][:3]] == ["waiting", "talking", "walking"]
     assert CATALOG["components"]["hair"][0] == "bald"

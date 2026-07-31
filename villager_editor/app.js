@@ -1,10 +1,10 @@
 const $ = (selector) => document.querySelector(selector);
 const state = { catalog: null, gender: "female", role: "farmer", previewTimer: null, request: 0 };
-const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking"];
+const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "wings", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking"];
 const pupilLabels = { default: "Carrées", small: "Petites", round: "Rondes voxel", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", large: "Grandes" };
 
 function label(value) {
-  const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", unibrow: "Monosourcil", draconic: "Draconiques", moose: "Élan", reindeer: "Renne", roe_deer: "Chevreuil", unicorn: "Licorne", ogre: "Ogre", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", wolf: "Loup", fox: "Renard", cat: "Chat", deer: "Cerf", rabbit: "Lapin", horse: "Cheval", goat: "Chèvre", dragon: "Dragon", lizard: "Lézard", crocodile: "Crocodile", iguana: "Iguane", serpent: "Serpent", none: "Aucun" };
+  const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", unibrow: "Monosourcil", draconic: "Draconiques", moose: "Élan", reindeer: "Renne", roe_deer: "Chevreuil", unicorn: "Licorne", ogre: "Ogre", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", wolf: "Loup", fox: "Renard", cat: "Chat", deer: "Cerf", rabbit: "Lapin", horse: "Cheval", goat: "Chèvre", dragon: "Dragon", bird: "Oiseau", angel: "Ange — quatre ailes", demonic: "Démoniaque", butterfly: "Papillon", insect: "Insecte", lizard: "Lézard", crocodile: "Crocodile", iguana: "Iguane", serpent: "Serpent", none: "Aucun" };
   if (names[value]) return names[value];
   return value.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -215,8 +215,13 @@ function randomize() {
   $("#horns").value = horn;
   const tail = Math.random() < (hornTail[horn] ? .75 : monster ? .2 : .06) ? (hornTail[horn] || pick(c.tail)) : "";
   $("#tail").value = tail;
+  const wings = Math.random() < (monster ? .18 : .035) ? pick(monster
+    ? c.wings.filter(value => ["dragon", "demonic", "insect"].includes(value))
+    : c.wings.filter(value => ["bird", "angel", "butterfly"].includes(value))) : "";
+  $("#wings").value = wings;
   $("#ears").value = ({ wolf: "wolf", fox: "fox", cat: "cat", rabbit: "rabbit", deer: "deer", goat: "goat", horse: "horse" })[tail] || pick(ears);
-  $("#accessory").value = Math.random() < (monster ? .35 : .6) ? pick(c.accessory) : "";
+  const accessories = wings ? c.accessory.filter(value => !["quiver", "traveler_cloak"].includes(value)) : c.accessory;
+  $("#accessory").value = Math.random() < (monster ? .35 : .6) ? pick(accessories) : "";
   $("#hairColor").value = pick(["#3e3028", "#6c3f28", "#8b5c3e", "#a4825d", "#c49a58", "#e0c58d"]);
   $("#skinColor").value = pick(monster
     ? ["#424d3d", "#586044", "#6b6947", "#65705a", "#795d43"]
@@ -244,7 +249,7 @@ function randomize() {
 async function start() {
   const response = await fetch("/api/catalog");
   state.catalog = await response.json();
-  Object.entries(state.catalog.components).forEach(([id, values]) => fillSelect(id, values, ["facialHair", "hat", "horns", "tail", "accessory"].includes(id)));
+  Object.entries(state.catalog.components).forEach(([id, values]) => fillSelect(id, values, ["facialHair", "hat", "horns", "tail", "wings", "accessory"].includes(id)));
   ["waiting", "talking", "walking"].forEach(id => fillSelect(id, state.catalog.animations[id]));
   fillSelect("preset", Object.keys(state.catalog.presets));
   checks($("#emotions"), state.catalog.animations.emotions, "emotion");

@@ -129,7 +129,8 @@ def reparent_upper_body(root):
     body = next(node for node in character["children"] if node.get("name") == "Body Structure")
     head = next(node for node in character["children"] if node.get("name") == "Head Rig")
     upper_names = {"Torso", "left_arm", "right_arm"}
-    members = [head] + [node for node in body["children"] if node.get("name") in upper_names]
+    members = [head] + [node for node in body["children"]
+                        if node.get("name") in upper_names or node.get("name", "").startswith("Wings -")]
     inverse = np.eye(4)
     inverse[:3, 3] = [-value for value in UPPER_BODY_PIVOT]
     for node in members:
