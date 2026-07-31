@@ -73,10 +73,10 @@ POPULATION = {
     "goblin_raider": ("male", "goblin_raider", ("upturned", "elf_long", "bald", "#4D2E1F", None, None, "monster_raider", "sword_scabbard"), "nervous", "excited", "cautious", ("anger", "fear", "surprise"), GOBLIN_RAIDER),
     "chubby_villager": ("male", "chubby", ("broad", "rounded", "short_heroic", "#6B4A35", "moustache_walrus", None, "common_m", "belt_pouch"), "calm", "lively", "heavy", ("joy", "surprise", "fear"), TRADER),
     "varkos_dragonkin": ("male", "dragonkin_warrior", ("aquiline", "elf_short", "bald", "#49372F", None, None, "monster_warrior", "sword_scabbard"), "vigilant", "authoritative", "heavy", ("anger", "fear", "surprise"), GOBLIN_RAIDER),
-    "bryn_moose_warden": ("male", "moose_warden", ("broad", "broad", "swept", "#654936", "trimmed", None, "hunter", "quiver"), "vigilant", "calm", "heavy", ("joy", "anger", "surprise"), HUNTER),
-    "yrsa_reindeer_oracle": ("female", "reindeer_oracle", ("small", "elf_long", "elven_cascade", "#B99664", None, None, "clergy", "amulet"), "calm", "storyteller", "cautious", ("joy", "sadness", "surprise"), CLERGY),
-    "fenn_roe_scout": ("male", "roe_scout", ("small", "elf_short", "short_heroic", "#76533A", None, None, "traveler_m", "quiver"), "vigilant", "calm", "brisk", ("fear", "joy", "surprise"), HUNTER),
-    "maela_faun": ("female", "faun", ("upturned", "elf_short", "very_long_loose", "#8A5D3E", None, None, "rustic_f", "satchel"), "nervous", "lively", "brisk", ("joy", "fear", "surprise"), TRAVELER),
+    "bryn_moose_warden": ("male", "moose_warden", ("broad", "deer", "swept", "#654936", "trimmed", None, "hunter", "quiver"), "vigilant", "calm", "heavy", ("joy", "anger", "surprise"), HUNTER),
+    "yrsa_reindeer_oracle": ("female", "reindeer_oracle", ("small", "deer", "elven_cascade", "#B99664", None, None, "clergy", "amulet"), "calm", "storyteller", "cautious", ("joy", "sadness", "surprise"), CLERGY),
+    "fenn_roe_scout": ("male", "roe_scout", ("small", "deer", "short_heroic", "#76533A", None, None, "traveler_m", "quiver"), "vigilant", "calm", "brisk", ("fear", "joy", "surprise"), HUNTER),
+    "maela_faun": ("female", "faun", ("upturned", "goat", "very_long_loose", "#8A5D3E", None, None, "rustic_f", "satchel"), "nervous", "lively", "brisk", ("joy", "fear", "surprise"), TRAVELER),
 }
 
 

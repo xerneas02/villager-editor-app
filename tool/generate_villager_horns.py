@@ -82,11 +82,18 @@ STYLES = {
         p("inner_branch", (.43, 2.43, -.10), (.07, .15, .07), 2, -25),
         p("outer_branch", (.58, 2.48, -.10), (.07, .15, .07), 2, 30),
     ],
+    "unicorn": [
+        p("root", (0, 2.16, -.33), (.18, .19, .18), 1, -9),
+        p("lower", (0, 2.29, -.38), (.15, .19, .15), 0, -9),
+        p("middle", (0, 2.43, -.43), (.12, .18, .12), 0, -9),
+        p("upper", (0, 2.56, -.48), (.09, .15, .09), 2, -9),
+        p("tip", (0, 2.66, -.52), (.055, .10, .06), 2, -9),
+    ],
 }
 
 STYLE_COLORS = {
     "draconic": "#645447", "moose": "#896A48",
-    "reindeer": "#957650", "roe_deer": "#A08059",
+    "reindeer": "#957650", "roe_deer": "#A08059", "unicorn": "#E2D7B8",
 }
 
 
@@ -97,14 +104,16 @@ def build(style, color=None):
     color = color or STYLE_COLORS.get(style, "#C8B88C")
     textures.extend(texture(tint(color, factor)) for factor in (1, .76, 1.14))
     pieces = []
-    for side, sign in (("left", -1), ("right", 1)):
-        pieces.append(hair_box(
-            f"{side}_socket", (sign * .40, 2.01, -.18), (.20, .16, .19), (0, 0, 0), first + 1,
-        ))
+    sides = (("center", 0),) if style == "unicorn" else (("left", -1), ("right", 1))
+    for side, sign in sides:
+        socket = ((0, 2.01, -.31), (.22, .16, .20)) if style == "unicorn" else ((sign * .40, 2.01, -.18), (.20, .16, .19))
+        pieces.append(hair_box(f"{side}_socket", socket[0], socket[1], (0, 0, 0), first + 1))
         for name, center, size, tone, angle in STYLES[style]:
+            position = center if style == "unicorn" else (sign * center[0], center[1], center[2])
+            rotation = (angle, 0, 0) if style == "unicorn" else (0, 0, -sign * angle)
             pieces.append(hair_box(
-                f"{side}_{name}", (sign * center[0], center[1] + HORN_Y_OFFSET, center[2]), size,
-                (0, 0, -sign * angle), first + tone,
+                f"{side}_{name}", (position[0], position[1] + HORN_Y_OFFSET, position[2]), size,
+                rotation, first + tone,
             ))
     root["children"].append({
         "isCollection": True, "isBackCollection": False,

@@ -485,7 +485,8 @@ def self_test():
     assert validate(legacy_face)["eyebrows"] == "thin"
     assert set(CATALOG["components"]["eyebrows"]) == set(EYEBROWS)
     assert set(CATALOG["components"]["pupilStyle"]) == set(PUPILS)
-    assert {"short", "long", "curved", "ram", "draconic", "moose", "reindeer", "roe_deer"} <= set(CATALOG["components"]["horns"])
+    assert {"short", "long", "curved", "ram", "draconic", "moose", "reindeer", "roe_deer", "unicorn"} <= set(CATALOG["components"]["horns"])
+    assert {"none", "cat", "wolf", "fox", "rabbit", "deer", "goat", "horse", "ogre"} <= set(CATALOG["components"]["ears"])
     assert {"wolf", "fox", "cat", "deer", "rabbit", "horse", "goat", "dragon"} <= set(CATALOG["components"]["tail"])
     horned_presets = {"varkos_dragonkin", "bryn_moose_warden", "yrsa_reindeer_oracle", "fenn_roe_scout", "maela_faun"}
     assert horned_presets <= set(CATALOG["presets"])
@@ -500,6 +501,10 @@ def self_test():
     horned = compose(validate({**sample, "horns": "short"}), animated=False)
     head_rig = next(node for node in walk(horned) if node.get("name") == "Head Rig")
     assert any(node.get("name") == "Horns - short" for node in head_rig["children"])
+    unicorn = compose(validate({**sample, "horns": "unicorn", "hair": "bald", "hat": ""}), animated=False)
+    assert len(next(node for node in walk(unicorn) if node.get("name") == "Horns - unicorn")["children"]) == 6
+    earless = compose(validate({**sample, "ears": "none"}), animated=False)
+    assert not next(node for node in walk(earless) if node.get("name") == "Ears - none")["children"]
     for style in PUPILS:
         face = compose(validate({**sample, "pupilStyle": style}), animated=False)
         assert all(len(next(node for node in walk(face) if node.get("name") == eye)["children"]) == (3 if style == "round" else 1)
