@@ -473,7 +473,7 @@ def self_test():
     legacy_face.pop("eyebrows")
     assert validate(legacy_face)["eyebrows"] == "thin"
     assert set(CATALOG["components"]["eyebrows"]) == set(EYEBROWS)
-    assert {"short", "long", "curved", "ram"} <= set(CATALOG["components"]["horns"])
+    assert {"short", "long", "curved", "ram", "draconic", "moose", "reindeer", "roe_deer"} <= set(CATALOG["components"]["horns"])
     for style in EYEBROWS:
         face = compose(validate({**sample, "eyebrows": style, "hair": "bald", "facialHair": "", "hat": ""}), animated=False)
         brow_counts = [len(next(node for node in walk(face) if node.get("name") == name)["children"])
