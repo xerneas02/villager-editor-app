@@ -261,6 +261,8 @@ def walk(node):
 
 def combine_with_outfit(style, outfit):
     root = copy.deepcopy(outfit if isinstance(outfit, dict) else load(outfit))
+    if not style:
+        return [root]
     preset = "" if isinstance(outfit, dict) else Path(outfit).stem.removeprefix("villager_outfit_")
     body_type = root.get("clothing", {}).get("body") or PRESETS.get(preset, ("standard",))[0]
     accessory = build(style, "standard" if style in MANUAL_TEMPLATES else body_type)[0][0]

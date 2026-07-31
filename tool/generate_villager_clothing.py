@@ -25,6 +25,7 @@ PALETTES = {
     "guard": ("#6A7685", "#A7A18F", "#5B3840", "#453329", "#A99A62"),
     "noble": ("#65506F", "#D7C9A8", "#B09245", "#3F3047", "#E6D7B8"),
     "common": ("#71808A", "#D0C3A1", "#795A43", "#49382A", "#A88B52"),
+    "monster": ("#ECB880", "#665039", "#896B45", "#493323", "#B99A62"),
 }
 
 TONE_NAMES = ("primary", "secondary", "trim", "leather", "accent")
@@ -48,6 +49,9 @@ PRESETS = {
     "well_dressed_f": ("slender", "fitted_bodice", "noble_skirt", "common"),
     "traveler_m": ("slender", "sleeveless_surcoat", "leggings", "hunter"),
     "traveler_f": ("slender", "belted_tunic", "long_skirt", "hunter"),
+    "monster_scraps": ("sturdy", "bare_chest", "hide_loincloth", "monster"),
+    "monster_raider": ("heroic", "bare_strapped", "hide_loincloth", "monster"),
+    "monster_shaman": ("slender", "bare_strapped", "hide_wrap", "monster"),
 }
 
 
@@ -92,6 +96,21 @@ def make_top(style, profile):
     d = profile["depth"]
     front = -.22 - d / 2 - .035
     bottom = profile["chest_y"] - profile["chest_h"] / 2
+
+    if style in ("bare_chest", "bare_strapped"):
+        result = base_top(profile, sleeves="long")
+        for side, sign in (("left_arm", -1), ("right_arm", 1)):
+            result[side].append(spec(
+                f"{side}_bare_shoulder", (sign * .01, -.13, 0),
+                (profile["arm"] + .08, .34, profile["depth"] * .76 + .06), "primary",
+                (0, 0, sign * -4),
+            ))
+        if style == "bare_strapped":
+            result["Torso"].extend([
+                spec("hide_shoulder_strap", (-.08, .99, front - .04), (.12, .55, .06), "leather", (0, 0, -24)),
+                spec("hide_belt", (0, bottom + .03, front - .02), (profile["waist"] + .12, .11, .06), "secondary"),
+            ])
+        return result
 
     if style == "plain_tunic":
         return add_torso(
@@ -306,12 +325,40 @@ def skirt_bottom(profile, style):
     return result
 
 
+def hide_bottom(profile, style):
+    front = -.22 - profile["depth"] / 2 - .05
+    result = {"Torso": [
+        spec("hide_waist", (0, .57, -.22), (profile["pelvis"] + .12, .15, profile["depth"] + .08), "leather"),
+        spec("hide_front", (0, .37, front), (profile["pelvis"] * .55, .35, .075), "secondary"),
+        spec("hide_front_ragged_left", (-.13, .17, front), (.18, .14, .075), "secondary"),
+        spec("hide_front_ragged_right", (.12, .20, front), (.20, .20, .075), "secondary"),
+    ], "left_leg": [], "right_leg": []}
+    hip = profile["hip"]
+    thigh_y = (.25 + hip + .03) / 2 - hip
+    for side in ("left_leg", "right_leg"):
+        result[side].extend([
+            spec(f"{side}_bare_thigh", (0, thigh_y, 0),
+                 (profile["leg"] + .045, hip - .20, profile["depth"] * .81 + .045), "primary"),
+            spec(f"{side}_bare_shin", (0, .20 - hip, 0),
+                 (profile["lower"] + .045, .31, profile["depth"] * .69 + .045), "primary"),
+            spec(f"{side}_hide_ankle_wrap", (0, .08 - hip, 0),
+                 (profile["lower"] + .06, .10, profile["depth"] * .73 + .05), "secondary"),
+        ])
+    if style == "hide_wrap":
+        result["Torso"].extend([
+            spec("hide_side_left", (-profile["pelvis"] / 2, .36, -.22), (.10, .38, profile["depth"] + .05), "trim", (0, 0, -3)),
+            spec("hide_side_right", (profile["pelvis"] / 2, .39, -.22), (.10, .32, profile["depth"] + .05), "trim", (0, 0, 3)),
+        ])
+    return result
+
+
 TOPS = {
     name: name for name in (
         "rough_tunic", "work_shirt", "blouse", "blacksmith_apron", "clergy_tunic",
         "hunter_jerkin", "guard_gambeson", "noble_doublet", "noble_bodice",
         "plain_tunic", "belted_tunic", "long_blouse", "fitted_bodice",
         "laced_tunic", "sleeveless_surcoat",
+        "bare_chest", "bare_strapped",
     )
 }
 
@@ -320,6 +367,7 @@ BOTTOMS = {
         "rough_trousers", "work_trousers", "leggings", "guard_chausses",
         "fitted_trousers", "plain_trousers", "knee_breeches", "simple_skirt",
         "long_skirt", "work_skirt_apron", "robe", "noble_skirt",
+        "hide_loincloth", "hide_wrap",
     )
 }
 
@@ -348,7 +396,12 @@ def build(body_type, top, bottom, palette_name):
     palette = {name: first + index for index, name in enumerate(TONE_NAMES)}
 
     top_parts = make_top(top, profile)
-    bottom_parts = skirt_bottom(profile, bottom) if bottom in ("simple_skirt", "long_skirt", "work_skirt_apron", "robe", "noble_skirt") else trouser_bottom(profile, bottom)
+    if bottom in ("hide_loincloth", "hide_wrap"):
+        bottom_parts = hide_bottom(profile, bottom)
+    elif bottom in ("simple_skirt", "long_skirt", "work_skirt_apron", "robe", "noble_skirt"):
+        bottom_parts = skirt_bottom(profile, bottom)
+    else:
+        bottom_parts = trouser_bottom(profile, bottom)
     total = 0
     for target in ("Torso", "left_arm", "right_arm", "left_leg", "right_leg"):
         specs = top_parts.get(target, []) + bottom_parts.get(target, [])
