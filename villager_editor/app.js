@@ -273,7 +273,7 @@ async function start() {
   applyPreset("mira_farmer");
 
   $("#preset").addEventListener("change", event => applyPreset(event.target.value));
-  ["nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "bodyType", "outfit", "accessory"]
+  ["nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "wings", "bodyType", "outfit", "accessory"]
     .forEach(id => $("#" + id).addEventListener("change", () => schedulePreview()));
   $("#scale").addEventListener("input", () => { updateScaleLabel(); schedulePreview(); });
   $("#headScale").addEventListener("input", () => { updateHeadScale(); schedulePreview(); });
