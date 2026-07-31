@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 from generate_villager_action_animations import add_animations as add_actions, specifications
 from generate_villager_accessories import walk
 from generate_villager_body import BODY_TYPES
-from generate_villager_clothing import PRESETS as OUTFIT_PRESETS
+from generate_villager_clothing import PRESETS as OUTFIT_PRESETS, build as build_outfit
 from generate_villager_emotion_animations import EMOTIONS, add_animations as add_emotions
 from generate_villager_examples import build, write
 from generate_villager_population import COMMON, POPULATION, thin_eyebrows
@@ -366,6 +366,9 @@ def self_test():
     assert CATALOG["components"]["hair"][0] == "bald"
     assert {"monster_raider", "monster_shaman", "monster_warrior"} <= set(CATALOG["components"]["outfit"])
     assert {"goblin", "orc", "brute"} <= set(CATALOG["components"]["bodyType"])
+    for body_type in ("goblin", "orc", "brute"):
+        for _, top, bottom, palette in OUTFIT_PRESETS.values():
+            assert build_outfit(body_type, top, bottom, palette)[1] > 0
     assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash"} <= set(ACTION_SPECS)
     assert compose(validate({**CATALOG["presets"]["mira_farmer"], "outfit": "monster_warrior",
                              "bodyType": "brute", "hair": "bald", "hat": "", "facialHair": "",
