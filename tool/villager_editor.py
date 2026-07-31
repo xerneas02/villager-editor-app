@@ -18,7 +18,7 @@ from generate_villager_body import BODY_TYPES
 from generate_villager_clothing import PRESETS as OUTFIT_PRESETS, build as build_outfit
 from generate_villager_emotion_animations import EMOTIONS, add_animations as add_emotions
 from generate_villager_examples import build, write
-from generate_villager_population import COMMON, POPULATION, thin_eyebrows
+from generate_villager_population import APPEARANCE_OVERRIDES, COMMON, POPULATION, thin_eyebrows
 from generate_villager_talking_animations import PERSONALITIES as TALKING, add_animations as add_talking
 from generate_villager_waiting_animations import PERSONALITIES as WAITING, add_animations as add_waiting
 from generate_villager_walking_animations import PROFILES as WALKING, add_animations as add_walking
@@ -72,6 +72,7 @@ def catalog():
             "walking": walking, "emotions": list(emotions),
             "actions": list(dict.fromkeys(COMMON + extra)),
         }
+        presets[name].update(APPEARANCE_OVERRIDES.get(name, {}))
     return {
         "components": {
             "nose": stems(villagers / "heads" / "noses", "villager_nose_"),
@@ -370,6 +371,9 @@ def self_test():
         for _, top, bottom, palette in OUTFIT_PRESETS.values():
             assert build_outfit(body_type, top, bottom, palette)[1] > 0
     assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash"} <= set(ACTION_SPECS)
+    goblin = CATALOG["presets"]["goblin_raider"]
+    assert goblin["bodyType"] == "goblin" and goblin["skinColor"] == "#424D3D"
+    assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash"} <= set(goblin["actions"])
     assert compose(validate({**CATALOG["presets"]["mira_farmer"], "outfit": "monster_warrior",
                              "bodyType": "brute", "hair": "bald", "hat": "", "facialHair": "",
                              "accessory": ""}), animated=False)
