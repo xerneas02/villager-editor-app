@@ -148,10 +148,9 @@ def make_accessory(style, profile):
             s("fletching_2", (.29, 1.45, back + .13), (.10, .10, .045), "light", (3, 0, -14)),
         ]
     elif style == "sword_scabbard":
-        sx, sy, angle, ux, uy, length = (
-            profile["shoulder"] + profile["arm"] / 2 + .12,
-            .56, -18, .309, .951, .58,
-        )
+        angle, length = -8, .58
+        sx, sy = min(waist / 2 + .08, profile["shoulder"] - .02), .43
+        ux, uy = -sin(radians(angle)), cos(radians(angle))
         bottom = (sx - ux * length / 2, sy - uy * length / 2)
         top = (sx + ux * length / 2, sy + uy * length / 2)
         ring = (waist / 2 + .06, profile["waist_y"])

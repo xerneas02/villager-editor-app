@@ -13,7 +13,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from generate_villager_action_animations import add_animations as add_actions, specifications
-from generate_villager_accessories import CATEGORIES as ACCESSORIES, combine_with_outfit, walk
+from generate_villager_accessories import CATEGORIES as ACCESSORIES, combine_with_outfit, make_accessory, walk
 from generate_villager_body import BODY_TYPES, group
 from generate_villager_clothing import PRESETS as OUTFIT_PRESETS, build as build_outfit
 from generate_villager_emotion_animations import EMOTIONS, add_animations as add_emotions
@@ -485,6 +485,10 @@ def self_test():
     chubby_outfit = build_outfit("chubby", "plain_tunic", "plain_trousers", "common")[0][0]
     for accessory in ACCESSORIES:
         assert combine_with_outfit(accessory, chubby_outfit)[0]["accessories"] == [accessory]
+    for profile in BODY_TYPES.values():
+        scabbard = next(spec for spec in make_accessory("sword_scabbard", profile)["Torso"]
+                        if spec[0] == "scabbard_body")
+        assert max(profile["waist"], profile.get("belly", 0)) / 2 < scabbard[1][0] < profile["shoulder"]
     assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash"} <= set(ACTION_SPECS)
     goblin = CATALOG["presets"]["goblin_raider"]
     assert goblin["bodyType"] == "goblin" and goblin["skinColor"] == "#424D3D"
