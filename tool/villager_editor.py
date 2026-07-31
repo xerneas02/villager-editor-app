@@ -54,6 +54,22 @@ def stems(folder, prefix):
 
 def catalog():
     villagers = ROOT / "bdengine" / "characters" / "villagers"
+    monster_bases = {"goblin", "orc", "brute"}
+    custom_bodies = []
+    monster_bodies = set(monster_bases)
+    for path in (villagers / "bodies").glob("*.bdengine"):
+        metadata = load(path).get("customComponent", {})
+        if metadata.get("category") == "body":
+            custom_bodies.append(metadata["name"])
+            if metadata.get("baseBodyType") in monster_bases:
+                monster_bodies.add(metadata["name"])
+    outfits = stems(villagers / "clothing" / "outfits", "villager_outfit_")
+    monster_outfits = []
+    for name in outfits:
+        source = load(next((villagers / "clothing" / "outfits").rglob(f"villager_outfit_{name}.bdengine")))
+        metadata = source.get("customComponent", {})
+        if source.get("clothing", {}).get("palette") == "monster" or metadata.get("baseBodyType") in monster_bases:
+            monster_outfits.append(name)
     facial = stems(villagers / "facial_hair" / "beards", "villager_beard_")
     facial += [f"moustache_{name}" for name in stems(
         villagers / "facial_hair" / "moustaches", "villager_moustache_")]
@@ -83,13 +99,13 @@ def catalog():
             "hair": ["bald", *stems(villagers / "hair", "villager_hair_")],
             "facialHair": sorted(facial),
             "hat": stems(villagers / "headwear", "villager_hat_"),
-            "outfit": stems(villagers / "clothing" / "outfits", "villager_outfit_"),
+            "outfit": outfits,
             "accessory": stems(villagers / "accessories", "villager_accessory_"),
-            "bodyType": [*BODY_TYPES, *sorted(
-                load(path).get("customComponent", {}).get("name")
-                for path in (villagers / "bodies").glob("*.bdengine")
-                if load(path).get("customComponent", {}).get("category") == "body"
-            )],
+            "bodyType": [*BODY_TYPES, *sorted(custom_bodies)],
+        },
+        "randomization": {
+            "monsterBodies": sorted(monster_bodies),
+            "monsterOutfits": sorted(monster_outfits),
         },
         "animations": {
             "waiting": list(WAITING), "talking": list(TALKING), "walking": list(WALKING),
@@ -415,6 +431,8 @@ def self_test():
     assert CATALOG["components"]["hair"][0] == "bald"
     assert {"monster_raider", "monster_shaman", "monster_warrior"} <= set(CATALOG["components"]["outfit"])
     assert {"goblin", "orc", "brute", "chubby"} <= set(CATALOG["components"]["bodyType"])
+    assert {"goblin", "orc", "brute"} <= set(CATALOG["randomization"]["monsterBodies"])
+    assert set(CATALOG["randomization"]["monsterOutfits"]) == {"monster_raider", "monster_shaman", "monster_warrior"}
     for body_type in ("goblin", "orc", "brute"):
         for _, top, bottom, palette in OUTFIT_PRESETS.values():
             assert build_outfit(body_type, top, bottom, palette)[1] > 0

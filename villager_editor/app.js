@@ -187,13 +187,27 @@ async function importComponent() {
 
 function randomize() {
   const c = state.catalog.components;
+  const rules = state.catalog.randomization;
   const pick = values => values[Math.floor(Math.random() * values.length)];
-  ["nose", "ears", "hair", "bodyType", "outfit"].forEach(id => $("#" + id).value = pick(c[id]));
-  ["facialHair", "hat", "accessory"].forEach(id => $("#" + id).value = Math.random() < .3 ? "" : pick(c[id]));
+  const body = pick(c.bodyType);
+  const monster = rules.monsterBodies.includes(body);
+  const normalOutfits = c.outfit.filter(value => !rules.monsterOutfits.includes(value));
+  const genderedOutfits = normalOutfits.filter(value => !value.endsWith(state.gender === "female" ? "_m" : "_f"));
+  const ears = monster ? c.ears.filter(value => value.includes("elf") || value === "broad") : c.ears;
+  $("#nose").value = pick(c.nose);
+  $("#ears").value = pick(ears);
+  $("#hair").value = monster && Math.random() < .35 ? "bald" : pick(c.hair);
+  $("#bodyType").value = body;
+  $("#outfit").value = pick(monster ? rules.monsterOutfits : genderedOutfits);
+  $("#facialHair").value = Math.random() < (monster ? .2 : state.gender === "male" ? .55 : .05) ? pick(c.facialHair) : "";
+  $("#hat").value = Math.random() < (monster ? .15 : .55) ? pick(c.hat) : "";
+  $("#accessory").value = Math.random() < (monster ? .35 : .6) ? pick(c.accessory) : "";
   $("#hairColor").value = pick(["#3e3028", "#6c3f28", "#8b5c3e", "#a4825d", "#c49a58", "#e0c58d"]);
-  $("#skinColor").value = pick(["#f2c894", "#ecb880", "#d99b68", "#b97850", "#8f573d", "#69402f"]);
+  $("#skinColor").value = pick(monster
+    ? ["#424d3d", "#586044", "#6b6947", "#65705a", "#795d43"]
+    : ["#f2c894", "#ecb880", "#d99b68", "#b97850", "#8f573d", "#69402f"]);
   $("#pupilColor").value = pick(["#424039", "#5b3a29", "#3f6045", "#3d5870", "#655078"]);
-  state.role = "custom";
+  state.role = monster ? "monster" : "custom";
   schedulePreview(0);
 }
 
