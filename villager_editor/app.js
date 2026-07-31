@@ -216,11 +216,11 @@ function randomize() {
   $("#pupilColor").value = pick(["#424039", "#5b3a29", "#3f6045", "#3d5870", "#655078"]);
   const ranges = {
     goblin: [1.35, 1.65], orc: [2.1, 2.45], brute: [2.35, 2.75],
-    chubby: [2.15, 2.45], sturdy: [1.95, 2.25], heroic: [1.95, 2.25],
-    compact: [1.7, 2.05], slender: [1.75, 2.1], standard: [1.8, 2.15],
+    chubby: [1.95, 2.25], sturdy: [1.8, 2.1], heroic: [1.8, 2.1],
+    compact: [1.65, 1.9], slender: [1.7, 1.95], standard: [1.75, 2.05],
   };
   const large = !child && !monster && Math.random() < .12;
-  const range = child ? [1.2, 1.55] : large ? [2.25, 2.55] : (ranges[base] || ranges.standard);
+  const range = child ? [1.2, 1.55] : large ? [2.15, 2.4] : (ranges[base] || ranges.standard);
   $("#scale").value = (range[0] + Math.random() * (range[1] - range[0])).toFixed(2);
   $("#scaleMode").value = "uniform";
   $("#scaleHead").checked = !child;

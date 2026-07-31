@@ -36,7 +36,7 @@ ACTION_SPECS = {f"{category.removesuffix('s')}_{name}": (category, name, profile
 BUILD_LOCK = threading.Lock()
 PREVIEW_KEYS = ("eyebrows", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "scaleHead", "headScale")
 LAST_PREVIEW = None
-DEFAULT_HEIGHT = 2.05
+DEFAULT_HEIGHT = 1.9
 PRESET_PROPORTIONS = {
     "alder_farmer": {"scale": 1.88},
     "elise_smith": {"scale": 1.72, "scaleHead": False, "headScale": .9},
@@ -490,6 +490,8 @@ def self_test():
     assert goblin["bodyType"] == "goblin" and goblin["skinColor"] == "#424D3D"
     assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash"} <= set(goblin["actions"])
     assert CATALOG["presets"]["chubby_villager"]["bodyType"] == "chubby"
+    assert abs(sum(preset["scale"] for preset in CATALOG["presets"].values()) /
+               len(CATALOG["presets"]) - 1.9) < .02
     assert CATALOG["presets"]["goblin_raider"]["scale"] == 1.52
     assert CATALOG["presets"]["chubby_villager"]["scale"] == 2.28
     assert CATALOG["presets"]["elise_smith"]["scaleHead"] is False
