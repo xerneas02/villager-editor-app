@@ -11,6 +11,7 @@ from generate_villager_emotion_animations import add_animations as add_emotions
 from generate_villager_examples import build, write
 from generate_villager_faces import find, scale_columns
 from generate_villager_talking_animations import add_animations as add_talking
+from generate_villager_tails import animate_tail
 from generate_villager_waiting_animations import add_animations as add_waiting
 from generate_villager_walking_animations import add_animations as add_walking
 from preview_bdengine import render
@@ -171,6 +172,7 @@ def animate(root, waiting, talking, walking, emotions, action_names):
                for category, name, profile in specifications()}
     selected = [catalog[name] for name in dict.fromkeys(COMMON + action_names)]
     add_actions(root, selected)
+    animate_tail(root)
 
 
 def overview(previews):

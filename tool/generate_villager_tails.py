@@ -5,14 +5,17 @@ import base64
 import copy
 import gzip
 import json
+from math import radians
 
-from generate_villager_body import BODY_TYPES
+from generate_villager_body import BODY_TYPES, group
 from generate_villager_hair import HEAD_DIR, VILLAGER_DIR, hair_box, texture, tint
 from preview_bdengine import load
 
 
 TAIL_DIR = VILLAGER_DIR / "tails"
 TAILS = ("wolf", "fox", "cat", "deer", "rabbit", "horse", "goat", "dragon")
+FURRY = set(TAILS) - {"dragon"}
+RIG_SPLITS = {"wolf": 2, "fox": 2, "cat": 2, "horse": 2, "dragon": 3}
 COLORS = {
     "wolf": "#746C62", "fox": "#A95F35", "cat": "#51463F", "deer": "#8A684B",
     "rabbit": "#B8AA96", "horse": "#5C4030", "goat": "#8B806E", "dragon": "#5D5148",
@@ -81,13 +84,16 @@ def specs(style, profile):
         ]
     if style == "dragon":
         return [
-            s("root", (0, y + .02, back + .08), (.22, .18, .20), 1, (32, 0, 0)),
-            s("segment_1", (0, y - .04, back + .24), (.20, .18, .23), 0, (30, 0, 0)),
-            s("segment_2", (0, y - .11, back + .41), (.17, .16, .22), 0, (27, 0, 0)),
-            s("segment_3", (0, y - .17, back + .57), (.14, .14, .20), 0, (24, 0, 0)),
-            s("segment_4", (0, y - .22, back + .71), (.11, .12, .17), 2, (21, 0, 0)),
-            s("tip", (0, y - .25, back + .82), (.07, .09, .13), 2, (18, 0, 0)),
-            s("ridge", (0, y + .08, back + .27), (.07, .13, .08), 2, (-8, 0, 0)),
+            s("root", (0, y + .03, back + .09), (.34, .27, .29), 1, (29, 0, 0)),
+            s("segment_1", (0, y - .05, back + .31), (.32, .25, .36), 0, (27, 0, 0)),
+            s("segment_2", (0, y - .14, back + .56), (.29, .23, .35), 0, (24, 0, 0)),
+            s("segment_3", (0, y - .23, back + .80), (.25, .21, .33), 0, (21, 0, 0)),
+            s("segment_4", (0, y - .31, back + 1.02), (.20, .18, .29), 0, (18, 0, 0)),
+            s("segment_5", (0, y - .37, back + 1.20), (.15, .15, .24), 2, (15, 0, 0)),
+            s("tip", (0, y - .41, back + 1.34), (.09, .11, .18), 2, (12, 0, 0)),
+            s("ridge_1", (0, y + .13, back + .34), (.09, .17, .11), 2, (-7, 0, 0)),
+            s("ridge_2", (0, y + .02, back + .69), (.08, .15, .10), 2, (-4, 0, 0)),
+            s("ridge_3", (0, y - .12, back + 1.00), (.07, .13, .09), 2, (0, 0, 0)),
         ]
     raise ValueError(f"Unknown tail: {style}")
 
@@ -98,16 +104,67 @@ def build(style, body_type="standard", color=None):
     first = len(refs)
     color = color or COLORS[style]
     refs.extend(texture(tint(color, factor)) for factor in (1, .72, 1.18))
-    tail = {
-        "isCollection": True, "isBackCollection": False, "name": f"Tail - {style}", "nbt": "",
-        "transforms": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-        "children": [hair_box(name, center, size, rotation, first + tone)
-                     for name, center, size, tone, rotation in specs(style, BODY_TYPES[body_type])],
-    }
+    parts = specs(style, BODY_TYPES[body_type])
+    pivot = (0, BODY_TYPES[body_type]["pelvis_y"], parts[0][1][2])
+
+    def boxes(items, origin):
+        return [hair_box(name, tuple(value - offset for value, offset in zip(center, origin)), size,
+                         rotation, first + tone) for name, center, size, tone, rotation in items]
+
+    split = RIG_SPLITS.get(style)
+    children = boxes(parts[:split] if split else parts, pivot)
+    if split:
+        tip_pivot = parts[split][1]
+        tip = group("Tail Tip Rig", tuple(value - offset for value, offset in zip(tip_pivot, pivot)),
+                    boxes(parts[split:], tip_pivot))
+        children.append(tip)
+    tail = group(f"Tail - {style}", pivot, children)
+    tail["tailColor"] = color
     root["children"].append(tail)
     root["tailStyle"] = style
     root["tailBodyType"] = body_type
-    return [root], len(tail["children"])
+    return [root], len(parts)
+
+
+def animate_tail(root):
+    tail = next((node for node in nodes(root) if node.get("name", "").startswith("Tail -")), None)
+    if not tail:
+        return root
+    style = tail["name"].removeprefix("Tail -")
+    tip = next((node for node in tail.get("children", []) if node.get("name") == "Tail Tip Rig"), None)
+    for animation in root.get("listAnim", []):
+        field = "animation" if animation["id"] == 1 else f"animation_{animation['id']}"
+        duration = max((frame["time"] for node in nodes(root) for frame in node.get(field, [])), default=0)
+        if not duration:
+            continue
+        name = animation["name"]
+        amplitude = (12 if "walking" in name or any(word in name for word in ("joy", "laugh", "wave"))
+                     else 3 if any(word in name for word in ("sleep", "sit", "kneel", "pray")) else 7)
+        amplitude *= {"dragon": .7, "rabbit": .55, "cat": 1.15}.get(style, 1)
+        tail[field] = sway(tail, duration, amplitude)
+        if tip:
+            tip[field] = sway(tip, duration, amplitude * .7, lagged=True)
+    root["tailAnimations"] = [entry["name"] for entry in root.get("listAnim", [])]
+    return root
+
+
+def nodes(root):
+    yield root
+    for child in root.get("children", []):
+        yield from nodes(child)
+
+
+def sway(node, duration, amplitude, lagged=False):
+    angles = (-amplitude * .3, amplitude * .5, amplitude * .25, -amplitude * .7, -amplitude * .3) if lagged else (0, amplitude, 0, -amplitude, 0)
+    default = node["defaultTransform"]
+    return [{
+        "time": duration * index / 4,
+        "position": dict(zip("xyz", default["position"])),
+        "rotation": {"x": radians(default["rotation"]["x"] + abs(angle) * .12),
+                     "y": radians(default["rotation"]["y"] + angle),
+                     "z": radians(default["rotation"]["z"])},
+        "scale": dict(zip("xyz", default["scale"])),
+    } for index, angle in enumerate(angles)]
 
 
 def write(style, output):

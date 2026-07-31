@@ -20,6 +20,7 @@ from generate_villager_emotion_animations import EMOTIONS, add_animations as add
 from generate_villager_examples import build, write
 from generate_villager_population import APPEARANCE_OVERRIDES, COMMON, EYEBROWS, POPULATION, PUPILS, eyebrows, pupils
 from generate_villager_talking_animations import PERSONALITIES as TALKING, add_animations as add_talking
+from generate_villager_tails import animate_tail
 from generate_villager_waiting_animations import (
     PERSONALITIES as WAITING, add_animations as add_waiting, reparent_character, reparent_head,
 )
@@ -265,6 +266,7 @@ def compose(config, animated=True):
         add_walking(root, (config["walking"],), generic_name=True)
         add_emotions(root, tuple(config["emotions"]))
         add_actions(root, [ACTION_SPECS[name] for name in config["actions"]])
+        animate_tail(root)
     apply_scale(root, config["scale"], config["scaleMode"], config["scaleHead"], config["headScale"], dimensions)
     root["name"] = config["name"]
     root["editorConfig"] = config
@@ -512,6 +514,10 @@ def self_test():
     tailed = compose(validate({**sample, "tail": "fox"}), animated=False)
     body = next(node for node in walk(tailed) if node.get("name") == "Body Structure")
     assert any(node.get("name") == "Tail - fox" for node in body["children"])
+    moving_tail = compose(validate({**sample, "tail": "fox", "hairColor": "#345678"}))
+    tail_rig = next(node for node in walk(moving_tail) if node.get("name") == "Tail - fox")
+    tip_rig = next(node for node in tail_rig["children"] if node.get("name") == "Tail Tip Rig")
+    assert tail_rig["tailColor"] == "#345678" and "animation" in tail_rig and "animation" in tip_rig
     assert root["editorAnimationCount"] == len(root["listAnim"]) == 21
     assert [animation["name"] for animation in root["listAnim"][:3]] == ["waiting", "talking", "walking"]
     assert CATALOG["components"]["hair"][0] == "bald"
