@@ -107,6 +107,12 @@
           <label>Parole<select id="talking"></select></label>
           <label>Marche<select id="walking"></select></label>
         </div>
+        <label class="scale-control walk-speed-control">
+          <span>Vitesse réelle de marche <output id="walkSpeedValue">1,00 bloc/s</output></span>
+          <input id="walkSpeed" type="range" min="0.1" max="12" step="0.05" value="1">
+          <span class="scale-limits"><span>0,1 bloc/s</span><span>12 blocs/s</span></span>
+        </label>
+        <p class="hint">Le rythme de <code>walking</code> est calibré sur cette vitesse et sur la longueur des jambes.</p>
         <h3>Émotions</h3>
         <div id="emotions" class="checks compact"></div>
         <div class="action-title">

@@ -118,6 +118,7 @@ def catalog():
         }
         presets[name].update(PRESET_PROPORTIONS.get(name, {}))
         presets[name].update(APPEARANCE_OVERRIDES.get(name, {}))
+        presets[name]["walkSpeed"] = round(WALKING[walking]["speed"] * presets[name]["scale"] / DEFAULT_HEIGHT, 2)
     return {
         "components": {
             "nose": stems(villagers / "heads" / "noses", "villager_nose_"),
@@ -141,6 +142,7 @@ def catalog():
         },
         "animations": {
             "waiting": list(WAITING), "talking": list(TALKING), "walking": list(WALKING),
+            "walkingSpeeds": {name: profile["speed"] for name, profile in WALKING.items()},
             "emotions": list(EMOTIONS), "actions": actions,
         },
         "presets": presets,
@@ -191,6 +193,13 @@ def validate(config):
     if not .5 <= scale <= 10:
         raise ValueError("La taille doit être comprise entre 0,5 et 10 blocs")
     result["scale"] = scale
+    try:
+        walk_speed = float(config.get("walkSpeed", WALKING[result["walking"]]["speed"] * scale / DEFAULT_HEIGHT))
+    except (TypeError, ValueError) as error:
+        raise ValueError("Vitesse de marche invalide") from error
+    if not .1 <= walk_speed <= 12:
+        raise ValueError("La vitesse de marche doit être comprise entre 0,1 et 12 blocs/s")
+    result["walkSpeed"] = walk_speed
     scale_mode = config.get("scaleMode", "uniform")
     if scale_mode not in ("uniform", "vertical"):
         raise ValueError("Mode d’échelle invalide")
@@ -230,11 +239,17 @@ def anatomy(root):
     return feet, min(skull_points), max(skull_points)
 
 
-def apply_scale(root, height, mode, scale_head, head_scale, dimensions):
+def body_scale(height, scale_head, head_scale, dimensions):
     feet, head_bottom, head_top = dimensions
     scale = float(height / (head_top - feet))
     if not scale_head:
         scale = float(max(.05, (height - (head_top - head_bottom) * head_scale) / (head_bottom - feet)))
+    return scale
+
+
+def apply_scale(root, height, mode, scale_head, head_scale, dimensions):
+    feet, head_bottom, head_top = dimensions
+    scale = body_scale(height, scale_head, head_scale, dimensions)
     head = reparent_head(root)
     character = reparent_character(root)
     axes = (scale, scale, scale) if mode == "uniform" else (1, scale, 1)
@@ -267,7 +282,11 @@ def compose(config, animated=True):
     if animated:
         add_waiting(root, (config["waiting"],), generic_name=True)
         add_talking(root, (config["talking"],), generic_name=True)
-        add_walking(root, (config["walking"],), generic_name=True)
+        leg = next(node for node in walk(root) if node.get("name") == "left_leg")
+        leg_length = (leg["defaultTransform"]["position"][1] - dimensions[0]) * body_scale(
+            config["scale"], config["scaleHead"], config["headScale"], dimensions)
+        add_walking(root, (config["walking"],), generic_name=True,
+                    movement_speed=config["walkSpeed"], leg_length=leg_length)
         add_emotions(root, tuple(config["emotions"]))
         add_actions(root, [ACTION_SPECS[name] for name in config["actions"]])
         animate_tail(root)
@@ -487,9 +506,17 @@ def self_test():
     sample = validate(CATALOG["presets"]["mira_farmer"])
     root = compose(sample)
     assert root["faceStyle"] == "feminine_thin_eyebrows"
+    walk_control = root["walkingController"]["animations"]["walking"]
+    assert walk_control["movementSpeed"] == sample["walkSpeed"]
+    assert walk_control["cycleDurationTicks"] < WALKING[sample["walking"]]["duration"]
+    faster = compose({**sample, "walkSpeed": sample["walkSpeed"] * 2})
+    assert faster["walkingController"]["animations"]["walking"]["cycleDurationTicks"] < walk_control["cycleDurationTicks"]
     legacy_face = dict(sample)
     legacy_face.pop("eyebrows")
     assert validate(legacy_face)["eyebrows"] == "thin"
+    legacy_walk = dict(sample)
+    legacy_walk.pop("walkSpeed")
+    assert validate(legacy_walk)["walkSpeed"] > 0
     assert set(CATALOG["components"]["eyebrows"]) == set(EYEBROWS)
     assert set(CATALOG["components"]["pupilStyle"]) == set(PUPILS)
     assert {"short", "long", "curved", "ram", "draconic", "moose", "reindeer", "roe_deer", "unicorn"} <= set(CATALOG["components"]["horns"])

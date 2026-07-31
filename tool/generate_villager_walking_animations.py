@@ -13,18 +13,21 @@ from preview_bdengine import load
 
 ROOT = Path(__file__).resolve().parent.parent
 ANIMATION_DIR = ROOT / "bdengine" / "characters" / "villagers" / "animations" / "walking"
+TICKS_PER_SECOND = 20
+DEFAULT_SPEEDUP = 1.2
+REFERENCE_LEG_LENGTH = .52
 
 PROFILES = {
-    "neutral": dict(duration=24, stride=25, arm=21, bob=.040, sway=1.5, lean=.5, head=1, twist=3),
-    "brisk": dict(duration=20, stride=36, arm=31, bob=.065, sway=2.4, lean=2, head=2, twist=4),
-    "heavy": dict(duration=32, stride=22, arm=17, bob=.075, sway=3.6, lean=2, head=2, twist=2.5),
-    "cautious": dict(duration=36, stride=16, arm=11, bob=.030, sway=1.8, lean=2.5, head=4, twist=2),
-    "elder": dict(duration=40, stride=13, arm=9, bob=.025, sway=3.2, lean=3, head=3, twist=1.5),
-    "proud": dict(duration=32, stride=19, arm=8, bob=.032, sway=1.2, lean=0, head=1, twist=2.5),
-    "monster": dict(duration=28, stride=27, arm=15, bob=.060, sway=4.0, lean=7, head=5, twist=5),
-    "villain": dict(duration=28, stride=25, arm=11, bob=.035, sway=1.6, lean=1, head=2, twist=6),
-    "idiot": dict(duration=24, stride=31, arm=35, bob=.085, sway=5.0, lean=-1, head=6, twist=7),
-    "barbarian": dict(duration=24, stride=34, arm=28, bob=.080, sway=4.8, lean=3, head=3, twist=6),
+    "neutral": dict(duration=24, speed=1.00, stride=25, arm=21, bob=.040, sway=1.5, lean=.5, head=1, twist=3),
+    "brisk": dict(duration=20, speed=1.45, stride=36, arm=31, bob=.065, sway=2.4, lean=2, head=2, twist=4),
+    "heavy": dict(duration=32, speed=.85, stride=22, arm=17, bob=.075, sway=3.6, lean=2, head=2, twist=2.5),
+    "cautious": dict(duration=36, speed=.65, stride=16, arm=11, bob=.030, sway=1.8, lean=2.5, head=4, twist=2),
+    "elder": dict(duration=40, speed=.50, stride=13, arm=9, bob=.025, sway=3.2, lean=3, head=3, twist=1.5),
+    "proud": dict(duration=32, speed=.90, stride=19, arm=8, bob=.032, sway=1.2, lean=0, head=1, twist=2.5),
+    "monster": dict(duration=28, speed=1.05, stride=27, arm=15, bob=.060, sway=4.0, lean=7, head=5, twist=5),
+    "villain": dict(duration=28, speed=1.00, stride=25, arm=11, bob=.035, sway=1.6, lean=1, head=2, twist=6),
+    "idiot": dict(duration=24, speed=1.20, stride=31, arm=35, bob=.085, sway=5.0, lean=-1, head=6, twist=7),
+    "barbarian": dict(duration=24, speed=1.35, stride=34, arm=28, bob=.080, sway=4.8, lean=3, head=3, twist=6),
 }
 
 SHOWCASES = {
@@ -58,15 +61,25 @@ def cycle_frames(node, duration, rotations, heights=None, sides=None):
             for time, rotation, height, side in zip(times, rotations, heights, sides)]
 
 
-def add_animations(root, styles, generic_name=False):
+def cycle_duration(profile, movement_speed=None, leg_length=REFERENCE_LEG_LENGTH):
+    natural_duration = profile["duration"] / DEFAULT_SPEEDUP
+    if movement_speed is not None:
+        cycle_distance = profile["speed"] * natural_duration / TICKS_PER_SECOND
+        natural_duration = cycle_distance * leg_length / REFERENCE_LEG_LENGTH / movement_speed * TICKS_PER_SECOND
+    return max(4, min(400, round(natural_duration / 4) * 4))
+
+
+def add_animations(root, styles, generic_name=False, movement_speed=None, leg_length=REFERENCE_LEG_LENGTH):
     reparent_head(root)
     character = reparent_character(root)
     upper = reparent_upper_body(root)
     remove_walking(root)
     first_id = max((entry["id"] for entry in root.get("listAnim", [])), default=0) + 1
+    controller = {}
     for offset, style in enumerate(styles):
         profile = PROFILES[style]
-        duration, stride, arm = profile["duration"], profile["stride"], profile["arm"]
+        duration = cycle_duration(profile, movement_speed, leg_length)
+        stride, arm = profile["stride"], profile["arm"]
         sway, lean, head = profile["sway"], profile["lean"], profile["head"]
         twist = profile["twist"]
         identifier = first_id + offset
@@ -102,10 +115,15 @@ def add_animations(root, styles, generic_name=False):
             find(root, "right_arm"), duration,
             ((arm, 0, 2), (0, 0, 0), (-arm, 0, -2), (0, 0, 0), (arm, 0, 2)),
         )
-        root.setdefault("listAnim", []).append({
-            "id": identifier, "name": "walking" if generic_name else f"walking_{style}",
-        })
+        name = "walking" if generic_name else f"walking_{style}"
+        root.setdefault("listAnim", []).append({"id": identifier, "name": name})
+        speed = movement_speed or profile["speed"] * leg_length / REFERENCE_LEG_LENGTH
+        controller[name] = {
+            "movementSpeed": round(speed, 3), "unit": "blocks_per_second",
+            "cycleDurationTicks": duration, "playbackMultiplier": "actual_speed / movementSpeed",
+        }
     root["walkingAnimations"] = list(styles)
+    root["walkingController"] = {"ticksPerSecond": TICKS_PER_SECOND, "animations": controller}
     return root
 
 

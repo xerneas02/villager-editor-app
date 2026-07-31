@@ -1,6 +1,6 @@
 const $ = (selector) => document.querySelector(selector);
 const state = { catalog: null, gender: "female", role: "farmer", previewTimer: null, request: 0 };
-const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "wings", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking"];
+const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "wings", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking", "walkSpeed"];
 const pupilLabels = { default: "Carrées", small: "Petites", round: "Rondes voxel", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", large: "Grandes" };
 
 function label(value) {
@@ -39,6 +39,7 @@ function config() {
   const result = Object.fromEntries(fields.map(id => [id, $("#" + id).value]));
   result.scale = Number(result.scale);
   result.headScale = Number(result.headScale);
+  result.walkSpeed = Number(result.walkSpeed);
   result.scaleHead = $("#scaleHead").checked;
   result.gender = state.gender;
   result.role = state.role;
@@ -57,6 +58,7 @@ function applyConfig(preset) {
   });
   updateScaleLabel();
   updateHeadScale();
+  updateWalkSpeed();
   updateSummary();
   schedulePreview(0);
 }
@@ -70,6 +72,10 @@ function updateHeadScale() {
   $("#headScale").disabled = !independent;
   $("#headScaleControl").classList.toggle("disabled", !independent);
   $("#headScaleValue").textContent = `×${Number($("#headScale").value).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function updateWalkSpeed() {
+  $("#walkSpeedValue").textContent = `${Number($("#walkSpeed").value).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} blocs/s`;
 }
 
 function applyPreset(key) {
@@ -244,12 +250,15 @@ function randomize() {
   const range = child ? [1.2, 1.55] : large ? [2.15, 2.4] : (ranges[base] || ranges.standard);
   const genderOffset = child || monster ? 0 : state.gender === "female" ? -.1 : .05;
   $("#scale").value = (range[0] + Math.random() * (range[1] - range[0]) + genderOffset).toFixed(2);
+  $("#walkSpeed").value = Math.min(12, Math.max(.1,
+    state.catalog.animations.walkingSpeeds[$("#walking").value] * Number($("#scale").value) / 1.9)).toFixed(2);
   $("#scaleMode").value = "uniform";
   $("#scaleHead").checked = !child;
   $("#headScale").value = child ? (.78 + Math.random() * .12).toFixed(2) : 1;
   state.role = child ? "child" : large ? "large" : monster ? "monster" : "custom";
   updateScaleLabel();
   updateHeadScale();
+  updateWalkSpeed();
   schedulePreview(0);
 }
 
@@ -277,6 +286,7 @@ async function start() {
     .forEach(id => $("#" + id).addEventListener("change", () => schedulePreview()));
   $("#scale").addEventListener("input", () => { updateScaleLabel(); schedulePreview(); });
   $("#headScale").addEventListener("input", () => { updateHeadScale(); schedulePreview(); });
+  $("#walkSpeed").addEventListener("input", updateWalkSpeed);
   $("#scaleMode").addEventListener("change", () => schedulePreview(0));
   $("#scaleHead").addEventListener("change", () => { updateHeadScale(); schedulePreview(0); });
   document.querySelectorAll("#waiting, #talking, #walking, input[data-kind]")
