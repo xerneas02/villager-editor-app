@@ -511,6 +511,14 @@ def self_test():
     assert walk_control["cycleDurationTicks"] < WALKING[sample["walking"]]["duration"]
     faster = compose({**sample, "walkSpeed": sample["walkSpeed"] * 2})
     assert faster["walkingController"]["animations"]["walking"]["cycleDurationTicks"] < walk_control["cycleDurationTicks"]
+    runner = compose(validate(CATALOG["presets"]["cedric_guard"]))
+    run_control = runner["runningController"]
+    runner_walk = runner["walkingController"]["animations"]["walking"]
+    assert run_control["movementSpeed"] == runner_walk["movementSpeed"] * 2
+    assert run_control["cycleDurationTicks"] < runner_walk["cycleDurationTicks"]
+    running = ACTION_SPECS["locomotion_running"][2]
+    assert len(running["left_leg"]) == 9 and max(abs(pose[1][0]) for pose in running["left_leg"]) >= 60
+    assert max(pose[2][1] for pose in running["body_motion"]) >= .13
     legacy_face = dict(sample)
     legacy_face.pop("eyebrows")
     assert validate(legacy_face)["eyebrows"] == "thin"

@@ -17,6 +17,8 @@ from preview_bdengine import load
 
 ROOT = Path(__file__).resolve().parent.parent
 ANIMATION_ROOT = ROOT / "bdengine" / "characters" / "villagers" / "animations"
+RUN_SPEED_MULTIPLIER = 2
+RUN_STRIDE_MULTIPLIER = 1.35
 
 ACTIONS = {
     "gestures": {
@@ -52,9 +54,13 @@ ACTIONS = {
                 "right_arm": [(0,), (9, (-72, 0, 10)), (41, (-72, 0, 10)), (50,)]},
     },
     "locomotion": {
-        "running": {"duration": 16, "body_motion": [(0, (5, 0, 1), (0, 0, 0)), (4, (5, 0, 0), (0, .085, 0)), (8, (5, 0, -1), (0, 0, 0)), (12, (5, 0, 0), (0, .085, 0)), (16, (5, 0, 1), (0, 0, 0))],
-                    "left_leg": [(0, (48, 0, 0)), (4,), (8, (-48, 0, 0)), (12,), (16, (48, 0, 0))], "right_leg": [(0, (-48, 0, 0)), (4,), (8, (48, 0, 0)), (12,), (16, (-48, 0, 0))],
-                    "left_arm": [(0, (-42, 0, -4)), (4,), (8, (42, 0, 4)), (12,), (16, (-42, 0, -4))], "right_arm": [(0, (42, 0, 4)), (4,), (8, (-42, 0, -4)), (12,), (16, (42, 0, 4))]},
+        "running": {"duration": 24,
+                    "body_motion": [(0, (9, 0, 2), (.018, .025, 0)), (3, (12, 0, 0), (0, -.015, 0)), (6, (8, 0, -2), (-.018, .135, 0)), (9, (10, 0, -1), (-.01, .06, 0)), (12, (9, 0, -2), (-.018, .025, 0)), (15, (12, 0, 0), (0, -.015, 0)), (18, (8, 0, 2), (.018, .135, 0)), (21, (10, 0, 1), (.01, .06, 0)), (24, (9, 0, 2), (.018, .025, 0))],
+                    "head": [(0, (3, -3, -1)), (3, (5, 0, 0)), (6, (1, 3, 1)), (9, (3, 1, 0)), (12, (3, 3, 1)), (15, (5, 0, 0)), (18, (1, -3, -1)), (21, (3, -1, 0)), (24, (3, -3, -1))],
+                    "left_leg": [(0, (62, -4, -3)), (3, (30, -2, -2)), (6, (-20, 2, 2)), (9, (-55, 4, 3)), (12, (-62, 4, 3)), (15, (-30, 2, 2)), (18, (20, -2, -2)), (21, (55, -4, -3)), (24, (62, -4, -3))],
+                    "right_leg": [(0, (-62, 4, 3)), (3, (-30, 2, 2)), (6, (20, -2, -2)), (9, (55, -4, -3)), (12, (62, -4, -3)), (15, (30, -2, -2)), (18, (-20, 2, 2)), (21, (-55, 4, 3)), (24, (-62, 4, 3))],
+                    "left_arm": [(0, (-62, 3, -13)), (3, (-35, 2, -10)), (6, (6, 0, -4)), (9, (50, -3, 10)), (12, (62, -3, 13)), (15, (35, -2, 10)), (18, (-6, 0, 4)), (21, (-50, 3, -10)), (24, (-62, 3, -13))],
+                    "right_arm": [(0, (62, -3, 13)), (3, (35, -2, 10)), (6, (-6, 0, 4)), (9, (-50, 3, -10)), (12, (-62, 3, -13)), (15, (-35, 2, -10)), (18, (6, 0, -4)), (21, (50, -3, 10)), (24, (62, -3, 13))]},
         "sneaking": {"duration": 32, "body_motion": [(0, (9, 0, 1), (.012, -.08, 0)), (8, (9, 0, 0), (0, -.055, 0)), (16, (9, 0, -1), (-.012, -.08, 0)), (24, (9, 0, 0), (0, -.055, 0)), (32, (9, 0, 1), (.012, -.08, 0))],
                      "left_leg": [(0, (18, 0, 0)), (8,), (16, (-18, 0, 0)), (24,), (32, (18, 0, 0))], "right_leg": [(0, (-18, 0, 0)), (8,), (16, (18, 0, 0)), (24,), (32, (-18, 0, 0))],
                      "left_arm": [(0, (-12, 0, -4)), (16, (12, 0, 4)), (32, (-12, 0, -4))], "right_arm": [(0, (12, 0, 4)), (16, (-12, 0, -4)), (32, (12, 0, 4))]},
@@ -202,6 +208,27 @@ def remove_actions(root):
         for identifier in identifiers:
             node.pop(animation_field(identifier), None)
     root["listAnim"] = [entry for entry in root.get("listAnim", []) if entry["id"] not in identifiers]
+    root.pop("runningController", None)
+
+
+def calibrated_running(root, profile):
+    walking = root.get("walkingController", {}).get("animations", {})
+    walking = walking.get("walking") or next(iter(walking.values()), None)
+    if walking:
+        duration = max(8, round(walking["cycleDurationTicks"] * RUN_STRIDE_MULTIPLIER / RUN_SPEED_MULTIPLIER / 4) * 4)
+        speed = walking["movementSpeed"] * RUN_SPEED_MULTIPLIER
+    else:
+        duration, speed = 16, 2.0
+    ratio = duration / profile["duration"]
+    result = copy.deepcopy(profile)
+    for key in ("body_motion", "head", "left_leg", "right_leg", "left_arm", "right_arm"):
+        result[key] = [(round(pose[0] * ratio), *pose[1:]) for pose in result[key]]
+    result["duration"] = duration
+    return result, {
+        "movementSpeed": round(speed, 3), "unit": "blocks_per_second",
+        "walkingSpeedMultiplier": RUN_SPEED_MULTIPLIER, "strideMultiplier": RUN_STRIDE_MULTIPLIER,
+        "cycleDurationTicks": duration, "playbackMultiplier": "actual_speed / movementSpeed",
+    }
 
 
 def add_animations(root, specs, generic=False):
@@ -214,6 +241,8 @@ def add_animations(root, specs, generic=False):
     targets = {"head": "Head Rig", "left_arm": "left_arm", "right_arm": "right_arm",
                "left_leg": "left_leg", "right_leg": "right_leg"}
     for offset, (category, name, profile) in enumerate(specs):
+        if category == "locomotion" and name == "running":
+            profile, root["runningController"] = calibrated_running(root, profile)
         field = animation_field(first_id + offset)
         for key, target_name in targets.items():
             if key in profile:
