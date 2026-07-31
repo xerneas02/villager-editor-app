@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atelier des villageois</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">BDENGINE · CHARACTER WORKSHOP</p>
+      <h1>Atelier des villageois</h1>
+    </div>
+    <div class="top-actions">
+      <input id="importFile" type="file" accept=".bdengine" hidden>
+      <button id="import" class="button ghost" type="button">Importer</button>
+      <button id="randomize" class="button ghost" type="button">Variation aléatoire</button>
+      <button id="export" class="button primary" type="button">Exporter le personnage</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="panel controls" aria-label="Paramètres du personnage">
+      <section class="section identity">
+        <div class="section-heading"><span>01</span><h2>Identité</h2></div>
+        <label>Archétype<select id="preset"></select></label>
+        <label>Nom<input id="name" maxlength="60" value="Mira Farmer"></label>
+        <div class="segmented" role="group" aria-label="Genre">
+          <button type="button" data-gender="female" class="active">Villageoise</button>
+          <button type="button" data-gender="male">Villageois</button>
+        </div>
+        <p class="hint">Les villageoises utilisent automatiquement les sourcils fins.</p>
+      </section>
+
+      <section class="section">
+        <div class="section-heading"><span>02</span><h2>Visage & cheveux</h2></div>
+        <div class="grid two">
+          <label>Nez<select id="nose"></select></label>
+          <label>Oreilles<select id="ears"></select></label>
+          <label>Coiffure<select id="hair"></select></label>
+          <label>Couleur des cheveux<input id="hairColor" type="color" value="#8A5B3D"></label>
+          <label>Couleur de peau<input id="skinColor" type="color" value="#ECB880"></label>
+          <label>Couleur des pupilles<input id="pupilColor" type="color" value="#424039"></label>
+          <label>Barbe / moustache<select id="facialHair"></select></label>
+          <label>Chapeau<select id="hat"></select></label>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading"><span>03</span><h2>Tenue</h2></div>
+        <div class="grid two">
+          <label>Type de corps<select id="bodyType"></select></label>
+          <label>Vêtement<select id="outfit"></select></label>
+          <label>Accessoire<select id="accessory"></select></label>
+        </div>
+      </section>
+
+      <section class="section component-library">
+        <div class="section-heading"><span>04</span><h2>Bibliothèque</h2></div>
+        <div class="grid two">
+          <label>Type de composant
+            <select id="componentCategory">
+              <option value="ears">Oreilles</option>
+              <option value="nose">Nez</option>
+              <option value="hair">Coiffure</option>
+              <option value="hat">Chapeau</option>
+              <option value="beard">Barbe</option>
+              <option value="moustache">Moustache</option>
+              <option value="outfit">Vêtement</option>
+              <option value="body">Type de corps</option>
+            </select>
+          </label>
+          <label>Nom du composant<input id="componentName" maxlength="60" placeholder="Ex. oreilles pointues"></label>
+        </div>
+        <label>Modèle source<input id="componentFile" type="file" accept=".bdengine"></label>
+        <button id="addComponent" class="button ghost library-button" type="button">Ajouter à la bibliothèque</button>
+        <p class="hint">Le modèle doit conserver les groupes modulaires de l’éditeur. Seul le composant choisi sera extrait.</p>
+      </section>
+
+      <section class="section animations">
+        <div class="section-heading"><span>05</span><h2>Animations</h2></div>
+        <div class="grid three">
+          <label>Attente<select id="waiting"></select></label>
+          <label>Parole<select id="talking"></select></label>
+          <label>Marche<select id="walking"></select></label>
+        </div>
+        <h3>Émotions</h3>
+        <div id="emotions" class="checks compact"></div>
+        <div class="action-title">
+          <h3>Actions</h3><span id="animationCount" class="counter">0 sélectionnée</span>
+        </div>
+        <div id="actions" class="action-groups"></div>
+      </section>
+    </aside>
+
+    <section class="stage" aria-label="Aperçu du personnage">
+      <div class="stage-header">
+        <div><span class="status-dot"></span><span id="status">Prêt</span></div>
+        <button id="refresh" class="icon-button" type="button" aria-label="Actualiser l’aperçu">↻</button>
+      </div>
+      <div class="preview-frame">
+        <div class="grid-floor"></div>
+        <img id="preview" alt="Aperçu trois vues du villageois">
+        <div id="placeholder" class="placeholder"><span>◆</span><p>Construction du personnage…</p></div>
+      </div>
+      <div class="summary">
+        <div><span>PERSONNAGE</span><strong id="summaryName">Mira Farmer</strong></div>
+        <div><span>RÔLE</span><strong id="summaryRole">Farmer</strong></div>
+        <div><span>ANIMATIONS</span><strong id="summaryAnimations">0</strong></div>
+      </div>
+      <p class="stage-note">L’aperçu montre le modèle au repos sous trois angles. Les animations sélectionnées sont intégrées au fichier exporté.</p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
