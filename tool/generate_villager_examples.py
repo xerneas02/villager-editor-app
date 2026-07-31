@@ -18,6 +18,7 @@ from generate_villager_hair import HAIR_DIR, HEAD_DIR, STYLES as HAIR_STYLES, bu
 from generate_villager_hats import HATS, build as build_hat
 from generate_villager_horns import HORN_DIR
 from generate_villager_noses import NOSE_DIR
+from generate_villager_tails import TAIL_DIR, TAILS, build as build_tail
 from preview_bdengine import load, render, url_texture
 
 
@@ -167,7 +168,7 @@ def facial_source(style):
     return FACIAL_DIR / "beards" / f"villager_beard_{style}.bdengine"
 
 
-def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#424039", horns=None):
+def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#424039", horns=None, tail=None):
     nose, ears, hair, hair_color, facial, hat, outfit, accessory = preset
     nose_source = load(NOSE_DIR / f"villager_nose_{nose}.bdengine")
     if nose_source.get("customComponent", {}).get("category") == "nose":
@@ -244,6 +245,13 @@ def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#4240
         horn_source = load(library_file(HORN_DIR, "villager_horns_", horns))
         merge_groups(root, horn_source, groups(horn_source, "Horns -"))
 
+    if tail:
+        tail_source = (build_tail(tail, build_body)[0][0] if tail in TAILS else
+                       load(library_file(TAIL_DIR, "villager_tail_", tail)))
+        merge_groups(root, tail_source, groups(tail_source, "Tail -"))
+        tail_group = root["children"].pop()
+        find(root, "Body Structure")["children"].append(tail_group)
+
     if hair == "bald":
         color_eyebrows(root, hair_color)
 
@@ -260,7 +268,7 @@ def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#4240
         "nose": nose, "ears": ears, "hair": hair, "facialHair": facial,
         "hat": hat, "outfit": outfit, "accessory": accessory, "skinColor": skin_color,
         "bodyType": selected_body,
-        "pupilColor": pupil_color, "horns": horns,
+        "pupilColor": pupil_color, "horns": horns, "tail": tail,
     }
     return [root]
 

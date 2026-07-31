@@ -37,6 +37,11 @@ GOBLIN_RAIDER = ("villain_threaten", "villain_evil_laugh", "villain_intimidate",
 APPEARANCE_OVERRIDES = {
     "goblin_raider": {"skinColor": "#424D3D", "pupilColor": "#621609", "bodyType": "goblin"},
     "chubby_villager": {"bodyType": "chubby"},
+    "varkos_dragonkin": {"skinColor": "#876D59", "pupilColor": "#C89A3A", "pupilStyle": "vertical_slit", "horns": "draconic", "tail": "dragon", "bodyType": "orc"},
+    "bryn_moose_warden": {"pupilColor": "#4C3A29", "pupilStyle": "large", "horns": "moose", "tail": "deer", "bodyType": "sturdy"},
+    "yrsa_reindeer_oracle": {"pupilColor": "#53705B", "pupilStyle": "round", "horns": "reindeer", "tail": "deer", "bodyType": "slender"},
+    "fenn_roe_scout": {"pupilColor": "#51432F", "pupilStyle": "round", "horns": "roe_deer", "tail": "deer", "bodyType": "compact"},
+    "maela_faun": {"pupilColor": "#6A5237", "pupilStyle": "horizontal_slit", "horns": "curved", "tail": "goat", "bodyType": "slender"},
 }
 
 # gender, role, model preset, waiting, talking, walking, emotions, extra actions
@@ -67,10 +72,16 @@ POPULATION = {
     "aelwen_healer": ("female", "elven_healer", ("small", "elf_short", "elven_cascade", "#E0C58D", None, "pointed_cap", "well_dressed_f", "amulet"), "calm", "storyteller", "neutral", ("joy", "sadness", "fear"), CLERGY),
     "goblin_raider": ("male", "goblin_raider", ("upturned", "elf_long", "bald", "#4D2E1F", None, None, "monster_raider", "sword_scabbard"), "nervous", "excited", "cautious", ("anger", "fear", "surprise"), GOBLIN_RAIDER),
     "chubby_villager": ("male", "chubby", ("broad", "rounded", "short_heroic", "#6B4A35", "moustache_walrus", None, "common_m", "belt_pouch"), "calm", "lively", "heavy", ("joy", "surprise", "fear"), TRADER),
+    "varkos_dragonkin": ("male", "dragonkin_warrior", ("aquiline", "elf_short", "bald", "#49372F", None, None, "monster_warrior", "sword_scabbard"), "vigilant", "authoritative", "heavy", ("anger", "fear", "surprise"), GOBLIN_RAIDER),
+    "bryn_moose_warden": ("male", "moose_warden", ("broad", "broad", "swept", "#654936", "trimmed", None, "hunter", "quiver"), "vigilant", "calm", "heavy", ("joy", "anger", "surprise"), HUNTER),
+    "yrsa_reindeer_oracle": ("female", "reindeer_oracle", ("small", "elf_long", "elven_cascade", "#B99664", None, None, "clergy", "amulet"), "calm", "storyteller", "cautious", ("joy", "sadness", "surprise"), CLERGY),
+    "fenn_roe_scout": ("male", "roe_scout", ("small", "elf_short", "short_heroic", "#76533A", None, None, "traveler_m", "quiver"), "vigilant", "calm", "brisk", ("fear", "joy", "surprise"), HUNTER),
+    "maela_faun": ("female", "faun", ("upturned", "elf_short", "very_long_loose", "#8A5D3E", None, None, "rustic_f", "satchel"), "nervous", "lively", "brisk", ("joy", "fear", "surprise"), TRAVELER),
 }
 
 
 EYEBROWS = ("thick", "thin", "arched", "stern", "worried", "bushy", "unibrow", "none")
+PUPILS = ("default", "small", "round", "vertical_slit", "horizontal_slit", "large")
 
 
 def eyebrows(root, style):
@@ -127,6 +138,30 @@ def thin_eyebrows(root):
     eyebrows(root, "thin")
 
 
+def pupils(root, style):
+    if style not in PUPILS:
+        raise ValueError(f"Unknown pupil style: {style}")
+    for eye in (find(root, "left_eye"), find(root, "right_eye")):
+        source = eye["children"][0]
+        if style == "small":
+            source["transforms"] = scale_columns(source["transforms"], x=.62, y=.62)
+        elif style == "vertical_slit":
+            source["transforms"] = scale_columns(source["transforms"], x=.30, y=.96)
+        elif style == "horizontal_slit":
+            source["transforms"] = scale_columns(source["transforms"], x=.94, y=.28)
+        elif style == "large":
+            source["transforms"] = scale_columns(source["transforms"], x=1.14, y=1.08)
+        elif style == "round":
+            pieces = []
+            for offset, width, height in ((-.14, .38, .25), (0, .72, .38), (.14, .38, .25)):
+                piece = copy.deepcopy(source)
+                piece["transforms"] = scale_columns(piece["transforms"], x=width, y=height)
+                piece["transforms"][7] += offset * source["transforms"][5]
+                pieces.append(piece)
+            eye["children"] = pieces
+    root["pupilStyle"] = style
+
+
 def animate(root, waiting, talking, walking, emotions, action_names):
     add_waiting(root, (waiting,), generic_name=True)
     add_talking(root, (talking,), generic_name=True)
@@ -158,7 +193,9 @@ def main():
     for name, (gender, role, preset, waiting, talking, walking, emotions, actions) in POPULATION.items():
         appearance = APPEARANCE_OVERRIDES.get(name, {})
         root = build(name, preset, appearance.get("skinColor", "#ECB880"),
-                     appearance.get("bodyType"), appearance.get("pupilColor", "#424039"))[0]
+                     appearance.get("bodyType"), appearance.get("pupilColor", "#424039"),
+                     appearance.get("horns"), appearance.get("tail"))[0]
+        pupils(root, appearance.get("pupilStyle", "default"))
         if gender == "female":
             thin_eyebrows(root)
         animate(root, waiting, talking, walking, emotions, actions)

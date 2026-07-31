@@ -1,9 +1,10 @@
 const $ = (selector) => document.querySelector(selector);
 const state = { catalog: null, gender: "female", role: "farmer", previewTimer: null, request: 0 };
-const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "horns", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking"];
+const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking"];
+const pupilLabels = { default: "Carrées", small: "Petites", round: "Rondes voxel", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", large: "Grandes" };
 
 function label(value) {
-  const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", unibrow: "Monosourcil", draconic: "Draconiques", moose: "Élan", reindeer: "Renne", roe_deer: "Chevreuil", none: "Aucun" };
+  const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", unibrow: "Monosourcil", draconic: "Draconiques", moose: "Élan", reindeer: "Renne", roe_deer: "Chevreuil", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", wolf: "Loup", fox: "Renard", cat: "Chat", deer: "Cerf", rabbit: "Lapin", horse: "Cheval", goat: "Chèvre", dragon: "Dragon", none: "Aucun" };
   if (names[value]) return names[value];
   return value.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -12,7 +13,7 @@ function fillSelect(id, values, optional = false) {
   const select = $("#" + id);
   select.replaceChildren();
   if (optional) select.add(new Option("Aucun", ""));
-  values.forEach(value => select.add(new Option(label(value), value)));
+  values.forEach(value => select.add(new Option(id === "pupilStyle" ? pupilLabels[value] : label(value), value)));
 }
 
 function checks(container, values, kind) {
@@ -208,13 +209,17 @@ function randomize() {
   $("#outfit").value = pick(monster ? rules.monsterOutfits : genderedOutfits);
   $("#facialHair").value = Math.random() < (monster ? .2 : state.gender === "male" ? .55 : .05) ? pick(c.facialHair) : "";
   $("#hat").value = Math.random() < (monster ? .15 : .55) ? pick(c.hat) : "";
-  $("#horns").value = Math.random() < (monster ? .35 : .03) ? pick(c.horns) : "";
+  const hornTail = { draconic: "dragon", moose: "deer", reindeer: "deer", roe_deer: "deer", ram: "goat", curved: "goat" };
+  const horn = Math.random() < (monster ? .35 : .03) ? pick(c.horns) : "";
+  $("#horns").value = horn;
+  $("#tail").value = Math.random() < (hornTail[horn] ? .75 : monster ? .2 : .06) ? (hornTail[horn] || pick(c.tail)) : "";
   $("#accessory").value = Math.random() < (monster ? .35 : .6) ? pick(c.accessory) : "";
   $("#hairColor").value = pick(["#3e3028", "#6c3f28", "#8b5c3e", "#a4825d", "#c49a58", "#e0c58d"]);
   $("#skinColor").value = pick(monster
     ? ["#424d3d", "#586044", "#6b6947", "#65705a", "#795d43"]
     : ["#f2c894", "#ecb880", "#d99b68", "#b97850", "#8f573d", "#69402f"]);
   $("#pupilColor").value = pick(["#424039", "#5b3a29", "#3f6045", "#3d5870", "#655078"]);
+  $("#pupilStyle").value = monster ? pick(c.pupilStyle) : Math.random() < .18 ? pick(c.pupilStyle) : "default";
   const ranges = {
     goblin: [1.35, 1.65], orc: [2.1, 2.45], brute: [2.35, 2.75],
     chubby: [1.95, 2.25], sturdy: [1.8, 2.1], heroic: [1.8, 2.1],
@@ -236,7 +241,7 @@ function randomize() {
 async function start() {
   const response = await fetch("/api/catalog");
   state.catalog = await response.json();
-  Object.entries(state.catalog.components).forEach(([id, values]) => fillSelect(id, values, ["facialHair", "hat", "horns", "accessory"].includes(id)));
+  Object.entries(state.catalog.components).forEach(([id, values]) => fillSelect(id, values, ["facialHair", "hat", "horns", "tail", "accessory"].includes(id)));
   ["waiting", "talking", "walking"].forEach(id => fillSelect(id, state.catalog.animations[id]));
   fillSelect("preset", Object.keys(state.catalog.presets));
   checks($("#emotions"), state.catalog.animations.emotions, "emotion");
@@ -253,7 +258,7 @@ async function start() {
   applyPreset("mira_farmer");
 
   $("#preset").addEventListener("change", event => applyPreset(event.target.value));
-  ["nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "horns", "bodyType", "outfit", "accessory"]
+  ["nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "bodyType", "outfit", "accessory"]
     .forEach(id => $("#" + id).addEventListener("change", () => schedulePreview()));
   $("#scale").addEventListener("input", () => { updateScaleLabel(); schedulePreview(); });
   $("#headScale").addEventListener("input", () => { updateHeadScale(); schedulePreview(); });
