@@ -140,10 +140,11 @@ def rasterize(cuboids, camera, center, radius, size=500):
     right = np.cross((0, 0, 1), camera)
     right /= np.linalg.norm(right)
     up = np.cross(camera, right)
+    light = camera - right * .45 + up * .75
+    light /= np.linalg.norm(light)
     scale = size / (radius * 2.2)
     image = np.full((size, size, 3), (32, 32, 32), dtype=np.uint8)
     depth_buffer = np.full((size, size), -np.inf)
-    edges = []
 
     def triangle(points, depths, shade):
         low = np.maximum(np.floor(points.min(axis=0)).astype(int), 0)
@@ -179,23 +180,11 @@ def rasterize(cuboids, camera, center, radius, size=500):
             if np.dot(normal, camera) <= 0:
                 continue
             indices = list(face)
-            color = np.asarray(to_rgb(shade)) * 255
+            normal /= np.linalg.norm(normal)
+            illumination = .68 + .32 * max(0, np.dot(normal, light))
+            color = np.asarray(to_rgb(shade)) * 255 * illumination
             triangle(screen[indices[:3]], depths[indices[:3]], color)
             triangle(screen[[indices[0], indices[2], indices[3]]], depths[[indices[0], indices[2], indices[3]]], color)
-            edges.extend((screen[a], screen[b], depths[a], depths[b])
-                         for a, b in zip(indices, indices[1:] + indices[:1]))
-
-    tolerance = radius / size * 3
-    for start, end, first_depth, last_depth in edges:
-        steps = max(1, int(np.max(np.abs(end - start))))
-        ratio = np.linspace(0, 1, steps + 1)
-        points = np.rint(start + (end - start) * ratio[:, None]).astype(int)
-        depths = first_depth + (last_depth - first_depth) * ratio
-        valid = ((points[:, 0] >= 0) & (points[:, 0] < size) &
-                 (points[:, 1] >= 0) & (points[:, 1] < size))
-        points, depths = points[valid], depths[valid]
-        visible = depths >= depth_buffer[points[:, 1], points[:, 0]] - tolerance
-        image[points[visible, 1], points[visible, 0]] = (40, 40, 40)
     return image
 
 
@@ -206,7 +195,7 @@ def rasterizer_self_test():
 
     image = rasterize([cube(0, "#0000ff"), cube(-.4, "#ff0000")],
                       np.array((0, -1, 0)), np.zeros(3), 1, 32)
-    assert tuple(image[16, 16]) == (255, 0, 0)
+    assert image[16, 16, 0] > 150 and tuple(image[16, 16, 1:]) == (0, 0)
 
 
 def reference_player(cuboids, horizontal=(-1, 0)):
