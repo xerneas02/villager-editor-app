@@ -3,7 +3,7 @@ const state = { catalog: null, gender: "female", role: "farmer", previewTimer: n
 const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking"];
 
 function label(value) {
-  const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", none: "Aucun" };
+  const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", unibrow: "Monosourcil", none: "Aucun" };
   if (names[value]) return names[value];
   return value.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
 }

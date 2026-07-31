@@ -70,7 +70,7 @@ POPULATION = {
 }
 
 
-EYEBROWS = ("thick", "thin", "arched", "stern", "worried", "bushy", "none")
+EYEBROWS = ("thick", "thin", "arched", "stern", "worried", "bushy", "unibrow", "none")
 
 
 def eyebrows(root, style):
@@ -107,18 +107,19 @@ def eyebrows(root, style):
         for group in groups:
             source = group["children"][0]
             pieces = []
-            for side, angle in ((-1, 13), (1, -13)):
+            for side in (-1, 0, 1):
                 piece = copy.deepcopy(source)
-                matrix = scale_columns(piece["transforms"], x=.52, y=.68)
-                width, height, turn = matrix[0], matrix[5], radians(angle)
-                matrix[0], matrix[1], matrix[4], matrix[5] = (
-                    width * cos(turn), -height * sin(turn), width * sin(turn), height * cos(turn)
-                )
-                matrix[3] += side * source["transforms"][0] * .24
-                matrix[7] += .09
+                matrix = scale_columns(piece["transforms"], x=.36, y=.58)
+                matrix[3] += side * source["transforms"][0] * .16
+                matrix[7] += (1 - abs(side)) * source["transforms"][5] * .18
                 piece["transforms"] = matrix
                 pieces.append(piece)
             group["children"] = pieces
+    elif style == "unibrow":
+        for index, group in enumerate(groups):
+            piece = group["children"][0]
+            piece["transforms"] = scale_columns(piece["transforms"], x=1.30, y=.88)
+            piece["transforms"][3] += (1, -1)[index] * piece["transforms"][0] * .05
     root["faceStyle"] = "feminine_thin_eyebrows" if style == "thin" else f"eyebrows_{style}"
 
 

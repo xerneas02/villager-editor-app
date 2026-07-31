@@ -474,7 +474,8 @@ def self_test():
         face = compose(validate({**sample, "eyebrows": style, "hair": "bald", "facialHair": "", "hat": ""}), animated=False)
         brow_counts = [len(next(node for node in walk(face) if node.get("name") == name)["children"])
                        for name in ("Group 17", "Group 18")]
-        assert brow_counts == ([0, 0] if style == "none" else [2, 2] if style in ("arched", "bushy") else [1, 1])
+        expected = {"none": [0, 0], "arched": [3, 3], "bushy": [2, 2]}.get(style, [1, 1])
+        assert brow_counts == expected
     assert root["editorAnimationCount"] == len(root["listAnim"]) == 21
     assert [animation["name"] for animation in root["listAnim"][:3]] == ["waiting", "talking", "walking"]
     assert CATALOG["components"]["hair"][0] == "bald"
