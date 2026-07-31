@@ -6,6 +6,8 @@ const pupilLabels = { default: "Carrées", small: "Petites", round: "Rondes voxe
 function label(value) {
   const animationNames = { monster: "Monstre", villain: "Méchant", idiot: "Idiot", barbarian: "Barbare" };
   if (animationNames[value]) return animationNames[value];
+  const hairNames = { buzz_cut: "Rasé court", mohawk: "Crête iroquoise", afro: "Afro", dreadlocks: "Dreadlocks", ponytail: "Queue-de-cheval", pigtails: "Couettes", bun: "Chignon", double_buns: "Doubles chignons", stubble: "Barbe rasée courte", moustache_stubble: "Moustache rasée courte" };
+  if (hairNames[value]) return hairNames[value];
   const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", unibrow: "Monosourcil", draconic: "Draconiques", moose: "Élan", reindeer: "Renne", roe_deer: "Chevreuil", unicorn: "Licorne", ogre: "Ogre", great_helm: "Grand heaume", knight_plate: "Chevalier en plates", knight_noble: "Chevalier noble", knight_black: "Chevalier noir", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", wolf: "Loup", fox: "Renard", cat: "Chat", deer: "Cerf", rabbit: "Lapin", horse: "Cheval", goat: "Chèvre", dragon: "Dragon", bird: "Oiseau", angel: "Ange — quatre ailes", demonic: "Démoniaque", butterfly: "Papillon", insect: "Insecte", lizard: "Lézard", crocodile: "Crocodile", iguana: "Iguane", serpent: "Serpent", none: "Aucun" };
   if (names[value]) return names[value];
   return value.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());

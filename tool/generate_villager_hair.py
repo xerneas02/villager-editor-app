@@ -207,6 +207,120 @@ def elven_half_up():
     return locks
 
 
+def buzz_cut():
+    return [
+        ("buzz_top", (0, 2.035, -.23), (.78, .045, .51), (0, 0, 0), 0),
+        ("buzz_back", (0, 1.89, .045), (.74, .25, .045), (0, 0, 0), 1),
+        ("buzz_left", (-.405, 1.89, -.22), (.045, .25, .48), (0, 0, 0), 1),
+        ("buzz_right", (.405, 1.89, -.22), (.045, .25, .48), (0, 0, 0), 0),
+        ("buzz_hairline", (0, 2.00, -.505), (.70, .065, .035), (-2, 0, 0), 2),
+    ]
+
+
+def mohawk():
+    return buzz_cut() + [
+        ("mohawk_front", (0, 2.15, -.43), (.15, .28, .17), (-10, 0, 0), 2),
+        ("mohawk_front_mid", (0, 2.19, -.27), (.16, .34, .18), (-5, 0, 0), 0),
+        ("mohawk_crown", (0, 2.20, -.09), (.17, .36, .19), (1, 0, 0), 2),
+        ("mohawk_back_mid", (0, 2.16, .055), (.16, .31, .17), (7, 0, 0), 0),
+        ("mohawk_back", (0, 2.08, .13), (.14, .22, .12), (14, 0, 0), 1),
+    ]
+
+
+def afro():
+    locks = cap()
+    for row, (y, z, xs) in enumerate((
+        (2.18, -.23, (-.30, -.15, 0, .15, .30)),
+        (2.08, -.40, (-.38, -.19, 0, .19, .38)),
+        (2.09, -.10, (-.40, -.20, 0, .20, .40)),
+        (1.91, .075, (-.36, -.18, 0, .18, .36)),
+    )):
+        for index, x in enumerate(xs):
+            locks.append((f"afro_{row}_{index}", (x, y - abs(x) * .08, z),
+                          (.22, .22, .20), (row * 2 - 3, x * 12, x * 9), (row + index) % 3))
+    locks += [
+        ("afro_left", (-.48, 1.94, -.22), (.19, .40, .39), (0, 0, -4), 1),
+        ("afro_right", (.48, 1.94, -.22), (.19, .40, .39), (0, 0, 4), 0),
+        ("afro_back_mass", (0, 1.84, .13), (.68, .38, .17), (2, 0, 0), 1),
+    ]
+    return locks
+
+
+def dreadlocks():
+    locks = cap() + [
+        ("dread_crown_left", (-.19, 2.11, -.29), (.42, .12, .37), (0, -5, -7), 2),
+        ("dread_crown_right", (.19, 2.10, -.29), (.42, .12, .37), (0, 5, 7), 0),
+    ]
+    roots = ((-.39, -.12, -5), (-.25, .09, -3), (-.08, .12, -1),
+             (.09, .12, 1), (.26, .09, 3), (.40, -.12, 5))
+    for column, (x, z, angle) in enumerate(roots):
+        for segment, y in enumerate((1.75, 1.53, 1.31, 1.11)):
+            width = .115 - segment * .008
+            locks.append((f"dread_{column}_{segment}",
+                          (x + angle * segment * .002, y, z + segment * .008),
+                          (width, .25, .12), (2, 0, angle * (-1 if segment % 2 else 1)),
+                          (column + segment) % 3))
+    return locks
+
+
+def ponytail():
+    return cap() + [
+        ("pony_swept_left", (-.19, 2.10, -.29), (.42, .11, .38), (0, -5, -8), 2),
+        ("pony_swept_right", (.19, 2.09, -.29), (.42, .11, .38), (0, 5, 8), 0),
+        ("pony_root", (0, 1.88, .13), (.30, .22, .16), (5, 0, 0), 1),
+        ("elastic", (0, 1.79, .205), (.20, .10, .10), (7, 0, 0), 3),
+        ("pony_0", (0, 1.65, .23), (.25, .26, .17), (8, 0, -3), 0),
+        ("pony_1", (.025, 1.43, .25), (.22, .25, .15), (6, 0, 6), 2),
+        ("pony_2", (-.015, 1.22, .26), (.19, .24, .13), (5, 0, -5), 1),
+        ("pony_tip", (0, 1.04, .26), (.13, .18, .11), (4, 0, 0), 0),
+    ]
+
+
+def pigtails():
+    locks = cap() + [
+        ("pigtail_part_left", (-.18, 2.10, -.31), (.42, .11, .35), (0, -5, -8), 2),
+        ("pigtail_part_right", (.18, 2.10, -.31), (.42, .11, .35), (0, 5, 8), 0),
+    ]
+    for side, sign in (("left", -1), ("right", 1)):
+        locks += [
+            (f"{side}_root", (sign * .43, 1.83, -.05), (.18, .22, .18), (0, 0, sign * 7), 1),
+            (f"{side}_elastic", (sign * .49, 1.72, -.04), (.10, .10, .11), (0, 0, sign * 8), 3),
+            (f"{side}_tail_0", (sign * .52, 1.56, -.03), (.16, .28, .15), (0, 0, sign * 9), 0),
+            (f"{side}_tail_1", (sign * .54, 1.34, -.015), (.14, .24, .13), (0, 0, -sign * 7), 2),
+            (f"{side}_tail_tip", (sign * .52, 1.17, 0), (.10, .16, .10), (0, 0, sign * 5), 1),
+        ]
+    return locks
+
+
+def bun():
+    return cap() + [
+        ("bun_swept_left", (-.18, 2.10, -.26), (.42, .11, .40), (0, -5, -8), 2),
+        ("bun_swept_right", (.18, 2.10, -.26), (.42, .11, .40), (0, 5, 8), 0),
+        ("bun_elastic", (0, 1.90, .14), (.28, .18, .08), (3, 0, 0), 3),
+        ("bun_core", (0, 1.91, .29), (.38, .34, .25), (4, 0, 0), 0),
+        ("bun_left", (-.16, 1.93, .285), (.20, .27, .25), (3, -5, -7), 1),
+        ("bun_right", (.16, 1.93, .285), (.20, .27, .25), (3, 5, 7), 2),
+        ("bun_top", (0, 2.08, .27), (.28, .12, .21), (2, 0, 0), 2),
+        ("bun_elastic_band", (0, 1.91, .42), (.34, .10, .04), (4, 0, 0), 3),
+    ]
+
+
+def double_buns():
+    locks = cap() + [
+        ("double_part_left", (-.18, 2.10, -.27), (.42, .11, .39), (0, -5, -8), 2),
+        ("double_part_right", (.18, 2.10, -.27), (.42, .11, .39), (0, 5, 8), 0),
+    ]
+    for side, sign in (("left", -1), ("right", 1)):
+        locks += [
+            (f"{side}_bun_elastic", (sign * .36, 2.07, -.09), (.13, .12, .13), (0, 0, sign * 8), 3),
+            (f"{side}_bun_core", (sign * .50, 2.11, -.08), (.29, .28, .27), (0, sign * 5, sign * 8), 0),
+            (f"{side}_bun_outer", (sign * .61, 2.10, -.07), (.16, .22, .22), (0, sign * 7, sign * 10), 1),
+            (f"{side}_bun_top", (sign * .50, 2.23, -.08), (.22, .12, .20), (0, sign * 4, sign * 5), 2),
+            (f"{side}_bun_elastic_band", (sign * .70, 2.10, -.07), (.04, .18, .18), (0, sign * 7, sign * 10), 3),
+        ]
+    return locks
+
+
 STYLES = {
     "short_heroic": short_heroic,
     "swept": swept,
@@ -215,6 +329,14 @@ STYLES = {
     "very_long_loose": very_long_loose,
     "elven_cascade": elven_cascade,
     "elven_half_up": elven_half_up,
+    "buzz_cut": buzz_cut,
+    "mohawk": mohawk,
+    "afro": afro,
+    "dreadlocks": dreadlocks,
+    "ponytail": ponytail,
+    "pigtails": pigtails,
+    "bun": bun,
+    "double_buns": double_buns,
 }
 
 
@@ -235,7 +357,9 @@ def build(style, color, use_template=True):
         root = copy.deepcopy(load(template))
         hair = next(group for group in root["children"] if group.get("name") == f"Hair - {style}")
         textures = root.setdefault("refs", {}).setdefault("paintTextures", [])
-        used = sorted({piece.get("paintTexture") for piece in hair["children"] if isinstance(piece.get("paintTexture"), int)})
+        used = sorted({piece.get("paintTexture") for piece in hair["children"]
+                       if isinstance(piece.get("paintTexture"), int)
+                       and "elastic" not in piece.get("_part", "")})
         assert len(used) == 3
         for index, factor in zip(used, (1, .82, 1.12)):
             textures[index] = texture(tint(color, factor))
@@ -247,9 +371,12 @@ def build(style, color, use_template=True):
     root = copy.deepcopy(load(SOURCE))
     textures = root.setdefault("refs", {}).setdefault("paintTextures", [])
     first_texture = len(textures)
+    specs = STYLES[style]()
     textures.extend(texture(tint(color, factor)) for factor in (1, .82, 1.12))
+    if any(tone == 3 for *_, tone in specs):
+        textures.append(texture(ImageColor.getrgb("#713E35")))
     pieces = [hair_box(name, center, size, rotation, first_texture + tone)
-              for name, center, size, rotation, tone in STYLES[style]()]
+              for name, center, size, rotation, tone in specs]
     root["children"].append({
         "isCollection": True,
         "isBackCollection": False,

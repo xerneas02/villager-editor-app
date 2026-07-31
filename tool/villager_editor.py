@@ -542,6 +542,8 @@ def self_test():
     assert special_animations <= set(WAITING) & set(TALKING) & set(WALKING)
     assert (CATALOG["presets"]["goblin_raider"]["waiting"], CATALOG["presets"]["goblin_raider"]["talking"],
             CATALOG["presets"]["goblin_raider"]["walking"]) == ("idiot", "monster", "monster")
+    assert {"buzz_cut", "mohawk", "afro", "dreadlocks", "ponytail", "pigtails", "bun", "double_buns"} <= set(CATALOG["components"]["hair"])
+    assert {"stubble", "moustache_stubble"} <= set(CATALOG["components"]["facialHair"])
     assert CATALOG["components"]["hair"][0] == "bald"
     assert {"monster_raider", "monster_shaman", "monster_warrior",
             "knight_plate", "knight_noble", "knight_black"} <= set(CATALOG["components"]["outfit"])
