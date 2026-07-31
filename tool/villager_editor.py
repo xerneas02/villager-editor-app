@@ -36,6 +36,16 @@ ACTION_SPECS = {f"{category.removesuffix('s')}_{name}": (category, name, profile
 BUILD_LOCK = threading.Lock()
 PREVIEW_KEYS = ("gender", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "scaleHead", "headScale")
 LAST_PREVIEW = None
+DEFAULT_HEIGHT = 2.05
+PRESET_PROPORTIONS = {
+    "alder_farmer": {"scale": 1.88},
+    "elise_smith": {"scale": 1.72, "scaleHead": False, "headScale": .9},
+    "bran_blacksmith": {"scale": 2.18},
+    "edric_lord": {"scale": 2.16},
+    "lyra_huntress": {"scale": 1.84},
+    "goblin_raider": {"scale": 1.52},
+    "chubby_villager": {"scale": 2.28},
+}
 COMPONENT_IMPORTS = {
     "ears": ("heads/ears", "villager_ears_", "Ears -", "ears"),
     "nose": ("heads/noses", "villager_nose_", "Nose -", "nose"),
@@ -57,10 +67,12 @@ def catalog():
     monster_bases = {"goblin", "orc", "brute"}
     custom_bodies = []
     monster_bodies = set(monster_bases)
+    body_bases = {name: name for name in BODY_TYPES}
     for path in (villagers / "bodies").glob("*.bdengine"):
         metadata = load(path).get("customComponent", {})
         if metadata.get("category") == "body":
             custom_bodies.append(metadata["name"])
+            body_bases[metadata["name"]] = metadata.get("baseBodyType", "standard")
             if metadata.get("baseBodyType") in monster_bases:
                 monster_bodies.add(metadata["name"])
     outfits = stems(villagers / "clothing" / "outfits", "villager_outfit_")
@@ -89,8 +101,9 @@ def catalog():
             "accessory": accessory or "", "waiting": waiting, "talking": talking,
             "walking": walking, "emotions": list(emotions),
             "actions": list(dict.fromkeys(COMMON + extra)),
-            "scale": 1.0, "scaleMode": "uniform", "scaleHead": True, "headScale": 1.0,
+            "scale": DEFAULT_HEIGHT, "scaleMode": "uniform", "scaleHead": True, "headScale": 1.0,
         }
+        presets[name].update(PRESET_PROPORTIONS.get(name, {}))
         presets[name].update(APPEARANCE_OVERRIDES.get(name, {}))
     return {
         "components": {
@@ -106,6 +119,7 @@ def catalog():
         "randomization": {
             "monsterBodies": sorted(monster_bodies),
             "monsterOutfits": sorted(monster_outfits),
+            "bodyBases": body_bases,
         },
         "animations": {
             "waiting": list(WAITING), "talking": list(TALKING), "walking": list(WALKING),
@@ -148,11 +162,11 @@ def validate(config):
         "walking": choice(config, "walking", CATALOG["animations"]["walking"]),
     }
     try:
-        scale = float(config.get("scale", 1))
+        scale = float(config.get("scale", DEFAULT_HEIGHT))
     except (TypeError, ValueError) as error:
-        raise ValueError("Échelle invalide") from error
+        raise ValueError("Taille invalide") from error
     if not .5 <= scale <= 10:
-        raise ValueError("L’échelle doit être comprise entre 0,5 et 10")
+        raise ValueError("La taille doit être comprise entre 0,5 et 10 blocs")
     result["scale"] = scale
     scale_mode = config.get("scaleMode", "uniform")
     if scale_mode not in ("uniform", "vertical"):
@@ -186,7 +200,18 @@ def validate(config):
     return result
 
 
-def apply_scale(root, scale, mode, scale_head, head_scale):
+def anatomy(root):
+    skull = next(child for child in root["children"] if child.get("name") == "Group 14")
+    feet = min(point[1] for corners, _ in boxes(root) for point in corners)
+    skull_points = [point[1] for corners, _ in boxes({"children": [skull], "refs": root.get("refs", {})}) for point in corners]
+    return feet, min(skull_points), max(skull_points)
+
+
+def apply_scale(root, height, mode, scale_head, head_scale, dimensions):
+    feet, head_bottom, head_top = dimensions
+    scale = float(height / (head_top - feet))
+    if not scale_head:
+        scale = float(max(.05, (height - (head_top - head_bottom) * head_scale) / (head_bottom - feet)))
     head = reparent_head(root)
     character = reparent_character(root)
     axes = (scale, scale, scale) if mode == "uniform" else (1, scale, 1)
@@ -196,8 +221,8 @@ def apply_scale(root, scale, mode, scale_head, head_scale):
     root["children"][root["children"].index(character)] = scale_rig
     if not scale_head:
         inverse = tuple(head_scale / value for value in axes)
-        skull = next(child for child in head["children"] if child.get("name") == "Group 14")
-        head_root = {"children": [skull], "refs": root.get("refs", {})}
+        skull_group = next(child for child in head["children"] if child.get("name") == "Group 14")
+        head_root = {"children": [skull_group], "refs": root.get("refs", {})}
         head_bottom = min(point[1] for corners, _ in boxes(head_root) for point in corners)
         offset_y = head_bottom * (1 - inverse[1])
         compensation = group("Head Scale Compensation", (0, 0, 0), head["children"])
@@ -205,13 +230,15 @@ def apply_scale(root, scale, mode, scale_head, head_scale):
         compensation["defaultTransform"]["position"] = [0, offset_y, 0]
         compensation["defaultTransform"]["scale"] = list(inverse)
         head["children"] = [compensation]
-    root["characterScale"] = {"value": scale, "mode": mode, "head": scale_head, "headScale": head_scale}
+    root["characterScale"] = {"value": height, "factor": scale, "unit": "blocks",
+                              "mode": mode, "head": scale_head, "headScale": head_scale}
 
 
 def compose(config, animated=True):
     model = (config["nose"], config["ears"], config["hair"], config["hairColor"],
              config["facialHair"], config["hat"], config["outfit"], config["accessory"])
     root = build(config["name"], model, config["skinColor"], config["bodyType"], config["pupilColor"])[0]
+    dimensions = anatomy(root)
     if config["gender"] == "female":
         thin_eyebrows(root)
     if animated:
@@ -220,11 +247,18 @@ def compose(config, animated=True):
         add_walking(root, (config["walking"],), generic_name=True)
         add_emotions(root, tuple(config["emotions"]))
         add_actions(root, [ACTION_SPECS[name] for name in config["actions"]])
-    apply_scale(root, config["scale"], config["scaleMode"], config["scaleHead"], config["headScale"])
+    apply_scale(root, config["scale"], config["scaleMode"], config["scaleHead"], config["headScale"], dimensions)
     root["name"] = config["name"]
     root["editorConfig"] = config
     root["editorAnimationCount"] = len(root.get("listAnim", []))
     return root
+
+
+def imported_config(root):
+    config = dict(root.get("editorConfig") or {})
+    if root.get("characterScale", {}).get("unit") != "blocks" and "scale" in config:
+        config["scale"] = float(config["scale"]) * DEFAULT_HEIGHT
+    return validate(config)
 
 
 def slug(text):
@@ -383,7 +417,7 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError("Taille de requête invalide")
             if path == "/api/import":
                 root = loads(self.rfile.read(length))
-                config = validate(root.get("editorConfig"))
+                config = imported_config(root)
                 self.json_response({"config": config, "name": config["name"]})
                 return
             payload = json.loads(self.rfile.read(length))
@@ -442,20 +476,28 @@ def self_test():
     assert goblin["bodyType"] == "goblin" and goblin["skinColor"] == "#424D3D"
     assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash"} <= set(goblin["actions"])
     assert CATALOG["presets"]["chubby_villager"]["bodyType"] == "chubby"
-    scaled = compose(validate({**CATALOG["presets"]["mira_farmer"], "scale": .5,
-                               "scaleMode": "uniform", "scaleHead": False, "headScale": 1.25}), animated=False)
-    assert next(node for node in walk(scaled) if node.get("name") == "Scale Rig")["defaultTransform"]["scale"] == [.5, .5, .5]
-    assert next(node for node in walk(scaled) if node.get("name") == "Head Scale Compensation")["defaultTransform"]["scale"] == [2.5, 2.5, 2.5]
+    assert CATALOG["presets"]["goblin_raider"]["scale"] == 1.52
+    assert CATALOG["presets"]["chubby_villager"]["scale"] == 2.28
+    assert CATALOG["presets"]["elise_smith"]["scaleHead"] is False
+    scaled = compose(validate({**CATALOG["presets"]["mira_farmer"], "scale": 1.4,
+                               "scaleMode": "uniform", "scaleHead": False, "headScale": .8,
+                               "hair": "bald", "facialHair": "", "hat": "", "accessory": ""}), animated=False)
+    factor = scaled["characterScale"]["factor"]
+    assert scaled["characterScale"]["value"] == 1.4 and scaled["characterScale"]["unit"] == "blocks"
+    assert next(node for node in walk(scaled) if node.get("name") == "Scale Rig")["defaultTransform"]["scale"] == [factor] * 3
+    assert next(node for node in walk(scaled) if node.get("name") == "Head Scale Compensation")["defaultTransform"]["scale"] == [.8 / factor] * 3
     player = reference_player(boxes(scaled))
     player_y = [point[1] for corners, _ in player for point in corners]
     model_y = [point[1] for corners, _ in boxes(scaled) for point in corners]
+    assert abs(max(model_y) - min(model_y) - 1.4) < 1e-9
     assert abs(min(player_y) - min(model_y)) < 1e-9 and abs(max(player_y) - min(player_y) - 1.8) < 1e-9
     legacy = dict(CATALOG["presets"]["mira_farmer"])
     for key in ("scale", "scaleMode", "scaleHead", "headScale"):
         legacy.pop(key)
     assert {key: validate(legacy)[key] for key in ("scale", "scaleMode", "scaleHead", "headScale")} == {
-        "scale": 1.0, "scaleMode": "uniform", "scaleHead": True, "headScale": 1.0,
+        "scale": DEFAULT_HEIGHT, "scaleMode": "uniform", "scaleHead": True, "headScale": 1.0,
     }
+    assert imported_config({"editorConfig": {**sample, "scale": 1}, "characterScale": {"value": 1}})["scale"] == DEFAULT_HEIGHT
     assert compose(validate({**CATALOG["presets"]["mira_farmer"], "outfit": "monster_warrior",
                              "bodyType": "brute", "hair": "bald", "hat": "", "facialHair": "",
                              "accessory": ""}), animated=False)

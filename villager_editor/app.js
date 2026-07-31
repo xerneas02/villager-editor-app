@@ -56,7 +56,7 @@ function applyConfig(preset) {
 }
 
 function updateScaleLabel() {
-  $("#scaleValue").textContent = `×${Number($("#scale").value).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  $("#scaleValue").textContent = `${Number($("#scale").value).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} blocs`;
 }
 
 function updateHeadScale() {
@@ -189,8 +189,12 @@ function randomize() {
   const c = state.catalog.components;
   const rules = state.catalog.randomization;
   const pick = values => values[Math.floor(Math.random() * values.length)];
-  const body = pick(c.bodyType);
-  const monster = rules.monsterBodies.includes(body);
+  let body = pick(c.bodyType);
+  let monster = rules.monsterBodies.includes(body);
+  const child = !monster && Math.random() < .12;
+  if (child) body = pick(c.bodyType.filter(value => ["compact", "slender"].includes(rules.bodyBases[value])));
+  monster = rules.monsterBodies.includes(body);
+  const base = rules.bodyBases[body] || "standard";
   const normalOutfits = c.outfit.filter(value => !rules.monsterOutfits.includes(value));
   const genderedOutfits = normalOutfits.filter(value => !value.endsWith(state.gender === "female" ? "_m" : "_f"));
   const ears = monster ? c.ears.filter(value => value.includes("elf") || value === "broad") : c.ears;
@@ -207,7 +211,20 @@ function randomize() {
     ? ["#424d3d", "#586044", "#6b6947", "#65705a", "#795d43"]
     : ["#f2c894", "#ecb880", "#d99b68", "#b97850", "#8f573d", "#69402f"]);
   $("#pupilColor").value = pick(["#424039", "#5b3a29", "#3f6045", "#3d5870", "#655078"]);
-  state.role = monster ? "monster" : "custom";
+  const ranges = {
+    goblin: [1.35, 1.65], orc: [2.1, 2.45], brute: [2.35, 2.75],
+    chubby: [2.15, 2.45], sturdy: [1.95, 2.25], heroic: [1.95, 2.25],
+    compact: [1.7, 2.05], slender: [1.75, 2.1], standard: [1.8, 2.15],
+  };
+  const large = !child && !monster && Math.random() < .12;
+  const range = child ? [1.2, 1.55] : large ? [2.25, 2.55] : (ranges[base] || ranges.standard);
+  $("#scale").value = (range[0] + Math.random() * (range[1] - range[0])).toFixed(2);
+  $("#scaleMode").value = "uniform";
+  $("#scaleHead").checked = !child;
+  $("#headScale").value = child ? (.78 + Math.random() * .12).toFixed(2) : 1;
+  state.role = child ? "child" : large ? "large" : monster ? "monster" : "custom";
+  updateScaleLabel();
+  updateHeadScale();
   schedulePreview(0);
 }
 
