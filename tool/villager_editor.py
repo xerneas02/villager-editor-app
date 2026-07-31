@@ -538,6 +538,10 @@ def self_test():
     assert any(node is wing_group for node in walk(upper_rig))
     assert root["editorAnimationCount"] == len(root["listAnim"]) == 21
     assert [animation["name"] for animation in root["listAnim"][:3]] == ["waiting", "talking", "walking"]
+    special_animations = {"monster", "villain", "idiot", "barbarian"}
+    assert special_animations <= set(WAITING) & set(TALKING) & set(WALKING)
+    assert (CATALOG["presets"]["goblin_raider"]["waiting"], CATALOG["presets"]["goblin_raider"]["talking"],
+            CATALOG["presets"]["goblin_raider"]["walking"]) == ("idiot", "monster", "monster")
     assert CATALOG["components"]["hair"][0] == "bald"
     assert {"monster_raider", "monster_shaman", "monster_warrior",
             "knight_plate", "knight_noble", "knight_black"} <= set(CATALOG["components"]["outfit"])

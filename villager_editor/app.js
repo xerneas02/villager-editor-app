@@ -4,6 +4,8 @@ const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinCo
 const pupilLabels = { default: "Carrées", small: "Petites", round: "Rondes voxel", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", large: "Grandes" };
 
 function label(value) {
+  const animationNames = { monster: "Monstre", villain: "Méchant", idiot: "Idiot", barbarian: "Barbare" };
+  if (animationNames[value]) return animationNames[value];
   const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", unibrow: "Monosourcil", draconic: "Draconiques", moose: "Élan", reindeer: "Renne", roe_deer: "Chevreuil", unicorn: "Licorne", ogre: "Ogre", great_helm: "Grand heaume", knight_plate: "Chevalier en plates", knight_noble: "Chevalier noble", knight_black: "Chevalier noir", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", wolf: "Loup", fox: "Renard", cat: "Chat", deer: "Cerf", rabbit: "Lapin", horse: "Cheval", goat: "Chèvre", dragon: "Dragon", bird: "Oiseau", angel: "Ange — quatre ailes", demonic: "Démoniaque", butterfly: "Papillon", insect: "Insecte", lizard: "Lézard", crocodile: "Crocodile", iguana: "Iguane", serpent: "Serpent", none: "Aucun" };
   if (names[value]) return names[value];
   return value.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -228,6 +230,9 @@ function randomize() {
     : ["#f2c894", "#ecb880", "#d99b68", "#b97850", "#8f573d", "#69402f"]);
   $("#pupilColor").value = pick(["#424039", "#5b3a29", "#3f6045", "#3d5870", "#655078"]);
   $("#pupilStyle").value = monster ? pick(c.pupilStyle) : Math.random() < .18 ? pick(c.pupilStyle) : "default";
+  const specialAnimations = ["monster", "villain", "idiot", "barbarian"];
+  for (const kind of ["waiting", "talking", "walking"])
+    $("#" + kind).value = pick(state.catalog.animations[kind].filter(value => specialAnimations.includes(value) === monster));
   const ranges = {
     goblin: [1.35, 1.65], orc: [2.1, 2.45], brute: [2.35, 2.75],
     chubby: [1.95, 2.25], sturdy: [1.8, 2.1], heroic: [1.8, 2.1],

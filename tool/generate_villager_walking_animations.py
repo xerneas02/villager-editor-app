@@ -21,12 +21,18 @@ PROFILES = {
     "cautious": dict(duration=36, stride=16, arm=11, bob=.030, sway=1.8, lean=2.5, head=4, twist=2),
     "elder": dict(duration=40, stride=13, arm=9, bob=.025, sway=3.2, lean=3, head=3, twist=1.5),
     "proud": dict(duration=32, stride=19, arm=8, bob=.032, sway=1.2, lean=0, head=1, twist=2.5),
+    "monster": dict(duration=28, stride=27, arm=15, bob=.060, sway=4.0, lean=7, head=5, twist=5),
+    "villain": dict(duration=28, stride=25, arm=11, bob=.035, sway=1.6, lean=1, head=2, twist=6),
+    "idiot": dict(duration=24, stride=31, arm=35, bob=.085, sway=5.0, lean=-1, head=6, twist=7),
+    "barbarian": dict(duration=24, stride=34, arm=28, bob=.080, sway=4.8, lean=3, head=3, twist=6),
 }
 
 SHOWCASES = {
     "neutral": "village_artisan", "brisk": "forest_huntress",
     "heavy": "village_blacksmith", "cautious": "road_traveler",
     "elder": "elder_farmer", "proud": "noblewoman",
+    "monster": "village_blacksmith", "villain": "town_guard",
+    "idiot": "road_traveler", "barbarian": "village_blacksmith",
 }
 
 
