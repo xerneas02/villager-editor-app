@@ -1,5 +1,7 @@
 """Build a varied, role-aware population of animated villagers."""
 
+import copy
+from math import cos, radians, sin
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -68,11 +70,60 @@ POPULATION = {
 }
 
 
+EYEBROWS = ("thick", "thin", "arched", "stern", "worried", "bushy", "none")
+
+
+def eyebrows(root, style):
+    if style not in EYEBROWS:
+        raise ValueError(f"Unknown eyebrow style: {style}")
+    groups = [find(root, name) for name in ("Group 17", "Group 18")]
+    if style == "none":
+        for brow in groups:
+            brow["children"] = []
+    elif style == "thin":
+        for group in groups:
+            piece = group["children"][0]
+            piece["transforms"] = scale_columns(piece["transforms"], x=.86, y=.48)
+    elif style == "bushy":
+        for index, group in enumerate(groups):
+            source = group["children"][0]
+            main, tuft = copy.deepcopy(source), copy.deepcopy(source)
+            main["transforms"] = scale_columns(main["transforms"], x=1.05, y=.92)
+            tuft["transforms"] = scale_columns(tuft["transforms"], x=.48, y=.64)
+            tuft["transforms"][3] += (-1, 1)[index] * source["transforms"][0] * .18
+            tuft["transforms"][7] += source["transforms"][5] * .20
+            group["children"] = [main, tuft]
+    elif style in ("stern", "worried"):
+        for index, group in enumerate(groups):
+            piece = group["children"][0]
+            angle = (-12, 12)[index] * (1 if style == "stern" else -1)
+            matrix = scale_columns(piece["transforms"], y=.72)
+            width, height, turn = matrix[0], matrix[5], radians(angle)
+            matrix[0], matrix[1], matrix[4], matrix[5] = (
+                width * cos(turn), -height * sin(turn), width * sin(turn), height * cos(turn)
+            )
+            piece["transforms"] = matrix
+    elif style == "arched":
+        for group in groups:
+            source = group["children"][0]
+            pieces = []
+            for side, angle in ((-1, 13), (1, -13)):
+                piece = copy.deepcopy(source)
+                matrix = scale_columns(piece["transforms"], x=.52, y=.68)
+                width, height, turn = matrix[0], matrix[5], radians(angle)
+                matrix[0], matrix[1], matrix[4], matrix[5] = (
+                    width * cos(turn), -height * sin(turn), width * sin(turn), height * cos(turn)
+                )
+                matrix[3] += side * source["transforms"][0] * .24
+                matrix[7] += .09
+                piece["transforms"] = matrix
+                pieces.append(piece)
+            group["children"] = pieces
+    root["faceStyle"] = "feminine_thin_eyebrows" if style == "thin" else f"eyebrows_{style}"
+
+
 def thin_eyebrows(root):
-    for name in ("Group 17", "Group 18"):
-        brow = find(root, name)["children"][0]
-        brow["transforms"] = scale_columns(brow["transforms"], x=.86, y=.48)
-    root["faceStyle"] = "feminine_thin_eyebrows"
+    eyebrows(root, "thin")
 
 
 def animate(root, waiting, talking, walking, emotions, action_names):

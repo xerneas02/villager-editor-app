@@ -1,8 +1,10 @@
 const $ = (selector) => document.querySelector(selector);
 const state = { catalog: null, gender: "female", role: "farmer", previewTimer: null, request: 0 };
-const fields = ["name", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking"];
+const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking"];
 
 function label(value) {
+  const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", none: "Aucun" };
+  if (names[value]) return names[value];
   return value.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
@@ -44,7 +46,6 @@ function applyConfig(preset) {
   state.gender = preset.gender;
   state.role = preset.role;
   fields.forEach(id => { if (preset[id] !== undefined) $("#" + id).value = preset[id]; });
-  document.querySelectorAll("[data-gender]").forEach(button => button.classList.toggle("active", button.dataset.gender === state.gender));
   $("#scaleHead").checked = preset.scaleHead ?? true;
   document.querySelectorAll('input[data-kind]').forEach(input => {
     input.checked = input.dataset.kind === "emotion" ? preset.emotions.includes(input.value) : preset.actions.includes(input.value);
@@ -189,6 +190,7 @@ function randomize() {
   const c = state.catalog.components;
   const rules = state.catalog.randomization;
   const pick = values => values[Math.floor(Math.random() * values.length)];
+  state.gender = Math.random() < .5 ? "female" : "male";
   let body = pick(c.bodyType);
   let monster = rules.monsterBodies.includes(body);
   const child = !monster && Math.random() < .12;
@@ -200,6 +202,7 @@ function randomize() {
   const ears = monster ? c.ears.filter(value => value.includes("elf") || value === "broad") : c.ears;
   $("#nose").value = pick(c.nose);
   $("#ears").value = pick(ears);
+  $("#eyebrows").value = pick(c.eyebrows);
   $("#hair").value = monster && Math.random() < .35 ? "bald" : pick(c.hair);
   $("#bodyType").value = body;
   $("#outfit").value = pick(monster ? rules.monsterOutfits : genderedOutfits);
@@ -248,12 +251,7 @@ async function start() {
   applyPreset("mira_farmer");
 
   $("#preset").addEventListener("change", event => applyPreset(event.target.value));
-  document.querySelectorAll("[data-gender]").forEach(button => button.addEventListener("click", () => {
-    state.gender = button.dataset.gender;
-    document.querySelectorAll("[data-gender]").forEach(item => item.classList.toggle("active", item === button));
-    schedulePreview(0);
-  }));
-  ["nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory"]
+  ["nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory"]
     .forEach(id => $("#" + id).addEventListener("change", () => schedulePreview()));
   $("#scale").addEventListener("input", () => { updateScaleLabel(); schedulePreview(); });
   $("#headScale").addEventListener("input", () => { updateHeadScale(); schedulePreview(); });
