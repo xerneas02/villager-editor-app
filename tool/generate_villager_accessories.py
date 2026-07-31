@@ -6,7 +6,7 @@ import copy
 import gzip
 import json
 import tempfile
-from math import atan2, degrees, hypot
+from math import atan2, cos, degrees, hypot, radians, sin
 from pathlib import Path
 
 from PIL import ImageColor
@@ -52,48 +52,65 @@ def s(name, center, size, tone="primary", rotation=(0, 0, 0)):
 
 
 def belt(profile, tone="dark"):
-    y, d, w = profile["waist_y"], profile["depth"], profile["waist"]
+    y = profile["waist_y"]
+    d = max(profile["depth"], profile.get("belly_depth", 0))
+    w = max(profile["waist"], profile.get("belly", 0))
+    center_z = -.22 - (d - profile["depth"]) / 2
     return [
-        s("belt_front", (0, y, -.22 - d / 2 - .035), (w + .09, .09, .05), tone),
-        s("belt_back", (0, y, -.22 + d / 2 + .035), (w + .09, .09, .05), tone),
-        s("belt_left", (-w / 2 - .035, y, -.22), (.05, .09, d), tone),
-        s("belt_right", (w / 2 + .035, y, -.22), (.05, .09, d), tone),
+        s("belt_front", (0, y, center_z - d / 2 - .035), (w + .09, .09, .05), tone),
+        s("belt_back", (0, y, center_z + d / 2 + .035), (w + .09, .09, .05), tone),
+        s("belt_left", (-w / 2 - .035, y, center_z), (.05, .09, d), tone),
+        s("belt_right", (w / 2 + .035, y, center_z), (.05, .09, d), tone),
     ]
 
 
 def make_accessory(style, profile):
-    d, chest, waist = profile["depth"], profile["chest"], profile["waist"]
+    d, chest = profile["depth"], profile["chest"]
+    waist = max(profile["waist"], profile.get("belly", 0))
+    waist_depth = max(d, profile.get("belly_depth", 0))
     front, back = -.22 - d / 2, -.22 + d / 2
+    upper_front = -.27 - profile.get("belly_depth", d) * .45 if profile.get("belly") else front
+    waist_front = -.29 - waist_depth / 2 if profile.get("belly") else front
     result = {"Torso": [], "left_arm": [], "right_arm": []}
+
+    def fitted_strap(name, center, length, angle):
+        if not profile.get("belly"):
+            return [s(name, center, (.075, length, .055), "dark", (0, 0, angle))]
+        dx, dy = sin(radians(angle)) * length / 4, cos(radians(angle)) * length / 4
+        return [
+            s(f"{name}_upper", (center[0] - dx, center[1] + dy, front - .04),
+              (.075, length / 2 + .03, .055), "dark", (0, 0, angle)),
+            s(f"{name}_lower", (center[0] + dx, center[1] - dy, waist_front - .04),
+              (.075, length / 2 + .03, .055), "dark", (0, 0, angle)),
+        ]
 
     if style == "belt_pouch":
         result["Torso"] = belt(profile) + [
-            s("pouch_loop", (.27, profile["waist_y"] - .07, front - .05), (.09, .16, .06), "metal"),
-            s("pouch_body", (.29, profile["waist_y"] - .20, front - .07), (.25, .25, .12)),
-            s("pouch_flap", (.29, profile["waist_y"] - .10, front - .14), (.23, .09, .05), "light"),
-            s("pouch_clasp", (.29, profile["waist_y"] - .15, front - .18), (.055, .07, .035), "metal"),
+            s("pouch_loop", (waist * .32, profile["waist_y"] - .07, waist_front - .05), (.09, .16, .06), "metal"),
+            s("pouch_body", (waist * .34, profile["waist_y"] - .20, waist_front - .07), (.25, .25, .12)),
+            s("pouch_flap", (waist * .34, profile["waist_y"] - .10, waist_front - .14), (.23, .09, .05), "light"),
+            s("pouch_clasp", (waist * .34, profile["waist_y"] - .15, waist_front - .18), (.055, .07, .035), "metal"),
         ]
     elif style == "tool_belt":
         result["Torso"] = belt(profile) + [
-            s("tool_loop_left", (-.30, profile["waist_y"] - .07, front - .05), (.09, .16, .06), "light"),
-            s("tool_loop_right", (.30, profile["waist_y"] - .07, front - .05), (.09, .16, .06), "light"),
-            s("tool_handle_left", (-.31, profile["waist_y"] - .23, front - .07), (.07, .30, .07), "dark", (0, 0, -7)),
-            s("tool_head_left", (-.37, profile["waist_y"] - .34, front - .07), (.20, .09, .10), "metal", (0, 0, -7)),
-            s("tool_handle_right", (.31, profile["waist_y"] - .22, front - .07), (.06, .27, .06), "dark", (0, 0, 6)),
+            s("tool_loop_left", (-waist * .35, profile["waist_y"] - .07, waist_front - .05), (.09, .16, .06), "light"),
+            s("tool_loop_right", (waist * .35, profile["waist_y"] - .07, waist_front - .05), (.09, .16, .06), "light"),
+            s("tool_handle_left", (-waist * .36, profile["waist_y"] - .23, waist_front - .07), (.07, .30, .07), "dark", (0, 0, -7)),
+            s("tool_head_left", (-waist * .43, profile["waist_y"] - .34, waist_front - .07), (.20, .09, .10), "metal", (0, 0, -7)),
+            s("tool_handle_right", (waist * .36, profile["waist_y"] - .22, waist_front - .07), (.06, .27, .06), "dark", (0, 0, 6)),
         ]
     elif style == "satchel":
-        result["Torso"] = [
-            s("satchel_strap", (.05, .92, front - .04), (.075, .86, .055), "dark", (0, 0, 32)),
-            s("satchel_body", (waist / 2 + .10, .59, -.22), (.27, .31, d * .72), "primary", (0, 0, -3)),
-            s("satchel_flap", (waist / 2 + .10, .67, front - .08), (.25, .12, .07), "light", (0, 0, -3)),
-            s("satchel_buckle", (waist / 2 + .10, .62, front - .13), (.055, .065, .035), "metal"),
+        result["Torso"] = fitted_strap("satchel_strap", (.05, .92, 0), .86, 32) + [
+            s("satchel_body", (waist / 2 + .10, .59, -.22), (.27, .31, waist_depth * .72), "primary", (0, 0, -3)),
+            s("satchel_flap", (waist / 2 + .10, .67, waist_front - .08), (.25, .12, .07), "light", (0, 0, -3)),
+            s("satchel_buckle", (waist / 2 + .10, .62, waist_front - .13), (.055, .065, .035), "metal"),
         ]
     elif style == "waterskin":
         result["Torso"] = belt(profile) + [
-            s("waterskin_neck", (-waist / 2 - .07, .66, front - .02), (.09, .14, .09), "dark"),
-            s("waterskin_upper", (-waist / 2 - .08, .54, front - .03), (.18, .17, .13), "primary", (0, 0, -4)),
-            s("waterskin_lower", (-waist / 2 - .08, .40, front - .03), (.23, .20, .16), "primary", (0, 0, 3)),
-            s("waterskin_stop", (-waist / 2 - .08, .70, front - .03), (.075, .07, .075), "metal"),
+            s("waterskin_neck", (-waist / 2 - .07, .66, waist_front - .02), (.09, .14, .09), "dark"),
+            s("waterskin_upper", (-waist / 2 - .08, .54, waist_front - .03), (.18, .17, .13), "primary", (0, 0, -4)),
+            s("waterskin_lower", (-waist / 2 - .08, .40, waist_front - .03), (.23, .20, .16), "primary", (0, 0, 3)),
+            s("waterskin_stop", (-waist / 2 - .08, .70, waist_front - .03), (.075, .07, .075), "metal"),
         ]
     elif style == "traveler_cloak":
         result["Torso"] = [
@@ -112,12 +129,11 @@ def make_accessory(style, profile):
             s("scarf_back", (0, 1.22, back + .04), (.35, .14, .08), "dark"),
             s("scarf_left", (-.20, 1.22, -.22), (.08, .14, d + .04), "light"),
             s("scarf_right", (.20, 1.22, -.22), (.08, .14, d + .04), "primary"),
-            s("scarf_tail_left", (-.06, 1.02, front - .051), (.10, .30, .07), "primary", (0, 0, -4)),
-            s("scarf_tail_right", (.057, 1.032, front - .057), (.09, .313, .065), "light", (0, 0, 5)),
+            s("scarf_tail_left", (-.06, 1.02, upper_front - .051), (.10, .30, .07), "primary", (0, 0, -4)),
+            s("scarf_tail_right", (.057, 1.032, upper_front - .057), (.09, .313, .065), "light", (0, 0, 5)),
         ]
     elif style == "quiver":
-        result["Torso"] = [
-            s("quiver_front_strap", (-chest * .05, .94, front - .03), (.075, .78, .055), "dark", (0, 0, 24)),
+        result["Torso"] = fitted_strap("quiver_front_strap", (-chest * .05, .94, 0), .78, 24) + [
             s("quiver_back_strap", (0, .94, back + .05), (.075, .78, .055), "dark", (0, 0, 24)),
             s("quiver_mount", (.24, .86, back + .07), (.22, .44, .09), "dark", (3, 0, -12)),
             s("quiver_lower_tie", (.13, .64, back + .08), (.40, .07, .08), "light", (0, 0, -8)),
@@ -171,8 +187,8 @@ def make_accessory(style, profile):
         result["Torso"] = [
             s("amulet_cord_left", (-.04, 1.08, front - .055), (.035, .31, .035), "dark", (0, 0, -13)),
             s("amulet_cord_right", (.04, 1.08, front - .055), (.035, .31, .035), "dark", (0, 0, 13)),
-            s("amulet_setting", (0, .92, front - .075), (.13, .13, .055), "metal", (0, 0, 45)),
-            s("amulet_stone", (0, .92, front - .11), (.075, .075, .035), "light", (0, 0, 45)),
+            s("amulet_setting", (0, .92, upper_front - .075), (.13, .13, .055), "metal", (0, 0, 45)),
+            s("amulet_stone", (0, .92, upper_front - .11), (.075, .075, .035), "light", (0, 0, 45)),
         ]
     elif style == "shoulder_mantle":
         result["Torso"] = [
@@ -265,7 +281,7 @@ def combine_with_outfit(style, outfit):
         return [root]
     preset = "" if isinstance(outfit, dict) else Path(outfit).stem.removeprefix("villager_outfit_")
     body_type = root.get("clothing", {}).get("body") or PRESETS.get(preset, ("standard",))[0]
-    accessory = build(style, "standard" if style in MANUAL_TEMPLATES else body_type)[0][0]
+    accessory = build(style, body_type)[0][0]
     source_textures = accessory.get("refs", {}).get("paintTextures", [])
     target_textures = root.setdefault("refs", {}).setdefault("paintTextures", [])
     for target in accessory["accessory"]["attachmentTargets"]:

@@ -99,6 +99,23 @@ def add_torso(result, *items):
     return result
 
 
+def fit_belly(profile, specs):
+    """Keep thin front details and lower garments outside a protruding belly."""
+    if not profile.get("belly"):
+        return specs
+    chest_front = -.22 - profile["depth"] / 2
+    fitted = []
+    for name, center, size, rotation, tone in specs:
+        x, y, z = center
+        bottom = y - size[1] / 2
+        if size[2] <= .10 and z < -.22 and bottom < .92:
+            belly_front = (-.29 - profile["belly_depth"] / 2 if bottom < .74
+                           else -.27 - profile["belly_depth"] * .45)
+            center = (x, y, z + belly_front - chest_front)
+        fitted.append((name, center, size, rotation, tone))
+    return fitted
+
+
 def make_top(style, profile):
     d = profile["depth"]
     front = -.22 - d / 2 - .035
@@ -307,7 +324,7 @@ def trouser_bottom(profile, style):
 
 
 def skirt_bottom(profile, style):
-    d = profile["depth"]
+    d = max(profile["depth"], profile.get("belly_depth", 0))
     result = {"Torso": [], "left_leg": [], "right_leg": []}
     if style == "robe":
         layers = ((.58, .24, profile["pelvis"] + .10),
@@ -346,7 +363,8 @@ def skirt_bottom(profile, style):
 
 
 def hide_bottom(profile, style, top):
-    front = -.22 - profile["depth"] / 2 - .05
+    depth = max(profile["depth"], profile.get("belly_depth", 0))
+    front = -.22 - depth / 2 - .05
     if style == "hide_wrap":
         front_y = profile["pelvis_y"] - .11
         ragged_y = (profile["pelvis_y"] - .0137, profile["pelvis_y"] - .0113)
@@ -363,7 +381,7 @@ def hide_bottom(profile, style, top):
         back_y, back_z = profile["pelvis_y"] + .065, -.22 + profile["depth"] / 2 + .0012
         ragged_z = (front + .0225, front + .0131)
     result = {"Torso": [
-        spec("hide_waist", (0, .57, -.22), (profile["pelvis"] + .12, .15, profile["depth"] + .08), "leather"),
+        spec("hide_waist", (0, .57, -.22), (profile["pelvis"] + .12, .15, depth + .08), "leather"),
         spec("hide_front", (0, front_y, front), (profile["pelvis"] * .55, .35, .075), "secondary"),
         spec("hide_front_ragged_left", (-.13, ragged_y[0], ragged_z[0]), (.18, .14, .075), "secondary"),
         spec("hide_front_ragged_right", (.125, ragged_y[1], ragged_z[1]), (.18, .14, .075), "secondary"),
@@ -383,8 +401,8 @@ def hide_bottom(profile, style, top):
         ])
     if style == "hide_wrap":
         result["Torso"].extend([
-            spec("hide_side_left", (-profile["pelvis"] / 2, .36, -.22), (.10, .38, profile["depth"] + .05), "trim", (0, 0, -3)),
-            spec("hide_side_right", (profile["pelvis"] / 2, .39, -.22), (.10, .32, profile["depth"] + .05), "trim", (0, 0, 3)),
+            spec("hide_side_left", (-profile["pelvis"] / 2, .36, -.22), (.10, .38, depth + .05), "trim", (0, 0, -3)),
+            spec("hide_side_right", (profile["pelvis"] / 2, .39, -.22), (.10, .32, depth + .05), "trim", (0, 0, 3)),
         ])
     return result
 
@@ -433,6 +451,7 @@ def build(body_type, top, bottom, palette_name):
     palette = {name: first + index for index, name in enumerate(TONE_NAMES)}
 
     top_parts = make_top(top, profile)
+    top_parts["Torso"] = fit_belly(profile, top_parts["Torso"])
     if bottom in ("hide_loincloth", "hide_wrap"):
         bottom_parts = hide_bottom(profile, bottom, top)
     elif bottom in ("simple_skirt", "long_skirt", "work_skirt_apron", "robe", "noble_skirt"):
