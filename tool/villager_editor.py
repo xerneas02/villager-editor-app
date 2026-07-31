@@ -534,7 +534,9 @@ def self_test():
     assert root["editorAnimationCount"] == len(root["listAnim"]) == 21
     assert [animation["name"] for animation in root["listAnim"][:3]] == ["waiting", "talking", "walking"]
     assert CATALOG["components"]["hair"][0] == "bald"
-    assert {"monster_raider", "monster_shaman", "monster_warrior"} <= set(CATALOG["components"]["outfit"])
+    assert {"monster_raider", "monster_shaman", "monster_warrior",
+            "knight_plate", "knight_noble", "knight_black"} <= set(CATALOG["components"]["outfit"])
+    assert "great_helm" in CATALOG["components"]["hat"]
     assert {"goblin", "orc", "brute", "chubby"} <= set(CATALOG["components"]["bodyType"])
     assert {"goblin", "orc", "brute"} <= set(CATALOG["randomization"]["monsterBodies"])
     assert set(CATALOG["randomization"]["monsterOutfits"]) == {"monster_raider", "monster_shaman", "monster_warrior"}
@@ -585,6 +587,9 @@ def self_test():
     assert compose(validate({**CATALOG["presets"]["mira_farmer"], "outfit": "monster_warrior",
                              "bodyType": "brute", "hair": "bald", "hat": "", "facialHair": "",
                              "accessory": ""}), animated=False)
+    assert compose(validate({**CATALOG["presets"]["mira_farmer"], "outfit": "knight_plate",
+                             "bodyType": "chubby", "hair": "bald", "hat": "great_helm",
+                             "facialHair": "", "accessory": ""}), animated=False)
     assert slug("Élise du Pont") == "elise_du_pont"
     print("Villager editor self-test passed")
 

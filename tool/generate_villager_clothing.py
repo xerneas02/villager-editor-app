@@ -26,6 +26,9 @@ PALETTES = {
     "noble": ("#65506F", "#D7C9A8", "#B09245", "#3F3047", "#E6D7B8"),
     "common": ("#71808A", "#D0C3A1", "#795A43", "#49382A", "#A88B52"),
     "monster": ("#ECB880", "#665039", "#896B45", "#493323", "#B99A62"),
+    "armor": ("#858B8D", "#BEC3C2", "#596064", "#4D382A", "#AA8A45"),
+    "royal_armor": ("#909AA5", "#D3D7D5", "#B39348", "#49372C", "#4C6282"),
+    "black_armor": ("#41464B", "#666C70", "#262A2E", "#3D2D27", "#87433F"),
 }
 
 TONE_NAMES = ("primary", "secondary", "trim", "leather", "accent")
@@ -52,6 +55,9 @@ PRESETS = {
     "monster_raider": ("orc", "bare_strapped", "hide_loincloth", "monster"),
     "monster_shaman": ("goblin", "bare_strapped", "hide_wrap", "monster"),
     "monster_warrior": ("brute", "hide_tunic", "hide_loincloth", "monster"),
+    "knight_plate": ("heroic", "plate_cuirass", "plate_greaves", "armor"),
+    "knight_noble": ("heroic", "ornate_cuirass", "plate_greaves", "royal_armor"),
+    "knight_black": ("heroic", "dark_cuirass", "plate_greaves", "black_armor"),
 }
 
 
@@ -257,6 +263,55 @@ def make_top(style, profile):
             spec("gambeson_collar", (0, 1.21, front - .015), (.34, .12, .065), "trim"),
             spec("gambeson_belt", (0, .71, front - .035), (profile["waist"] + .13, .11, .055), "leather"),
         )
+    if style in ("plate_cuirass", "ornate_cuirass", "dark_cuirass"):
+        result = base_top(profile, main="trim", sleeves="long", wide=.035)
+        result["Torso"].extend([
+            spec("cuirass_shell", (0, profile["chest_y"], -.22),
+                 (profile["chest"] + .11, profile["chest_h"] + .08, d + .11), "primary"),
+            spec("breastplate_left", (-profile["chest"] * .20, 1.04, front - .055),
+                 (profile["chest"] * .38, .28, .075), "secondary", (0, 0, -2)),
+            spec("breastplate_right", (profile["chest"] * .20, 1.04, front - .055),
+                 (profile["chest"] * .38, .28, .075), "secondary", (0, 0, 2)),
+            spec("plackart", (0, .83, front - .06), (profile["waist"] + .10, .20, .08), "primary"),
+            spec("gorget", (0, 1.23, front - .035), (.38, .12, .09), "secondary"),
+            spec("fauld_upper", (0, .70, front - .045), (profile["waist"] + .17, .10, .075), "secondary"),
+            spec("fauld_lower", (0, .62, front - .04), (profile["pelvis"] + .18, .09, .07), "primary"),
+        ])
+        if profile.get("belly"):
+            result["Torso"].extend([
+                spec("upper_belly_plate", (0, .78, -.27),
+                     (profile["belly"] * .90 + .10, .27, profile["belly_depth"] * .90 + .10), "primary"),
+                spec("lower_belly_plate", (0, .62, -.29),
+                     (profile["belly"] + .10, .25, profile["belly_depth"] + .10), "primary"),
+            ])
+        for side, sign in (("left_arm", -1), ("right_arm", 1)):
+            result[side].extend([
+                spec(f"{side}_pauldron", (sign * .025, -.11, 0),
+                     (profile["arm"] + .17, .23, d * .76 + .13), "secondary", (0, 0, sign * -5)),
+                spec(f"{side}_rerebrace", (sign * .02, -.29, 0),
+                     (profile["arm"] + .09, .20, d * .68 + .08), "primary", (0, 0, sign * 2)),
+                spec(f"{side}_elbow", (0, -.43, -.01),
+                     (profile["forearm"] + .12, .11, d * .62 + .10), "secondary"),
+                spec(f"{side}_vambrace", (0, -.55, -.01),
+                     (profile["forearm"] + .08, .21, d * .59 + .07), "primary", (0, 0, sign * -2)),
+            ])
+        if style == "ornate_cuirass":
+            result["Torso"].extend([
+                spec("ornate_center", (0, .99, front - .105), (.065, .38, .035), "accent"),
+                spec("ornate_crossbar", (0, 1.08, front - .105), (.40, .055, .035), "accent"),
+                spec("ornate_waist_trim", (0, .72, front - .09),
+                     (profile["waist"] + .15, .045, .035), "accent"),
+            ])
+        elif style == "dark_cuirass":
+            for side, sign in (("left_arm", -1), ("right_arm", 1)):
+                result[side].append(spec(
+                    f"{side}_pauldron_spike", (sign * .13, -.08, 0), (.24, .075, .075),
+                    "accent", (0, 0, sign * 27),
+                ))
+            result["Torso"].append(spec(
+                "dark_breast_ridge", (0, 1.01, front - .105), (.075, .39, .035), "accent"
+            ))
+        return result
     if style == "noble_doublet":
         result = base_top(profile, sleeves="long", wide=.04)
         return add_torso(
@@ -320,6 +375,19 @@ def trouser_bottom(profile, style):
                 f"{side}_breeches_cuff", (0, .28 - hip, 0),
                 (profile["leg"] + .05, .11, profile["depth"] * .75 + .04), "trim",
             ))
+        if style == "plate_greaves":
+            result[side].extend([
+                spec(f"{side}_cuissot", (0, thigh_y, -profile["depth"] * .05),
+                     (profile["leg"] + .10, hip - .18, profile["depth"] * .83 + .09), "primary",
+                     (0, 0, sign * -2)),
+                spec(f"{side}_poleyn", (0, .30 - hip, -profile["depth"] * .38),
+                     (profile["leg"] + .13, .15, .085), "secondary"),
+                spec(f"{side}_greave", (0, .18 - hip, -profile["depth"] * .04),
+                     (profile["lower"] + .10, .29, profile["depth"] * .73 + .08), "primary",
+                     (0, 0, sign)),
+                spec(f"{side}_sabatons", (0, .07 - hip, -.08),
+                     (profile["foot"] + .08, .17, profile["depth"] + .09), "secondary"),
+            ])
     return result
 
 
@@ -414,6 +482,7 @@ TOPS = {
         "plain_tunic", "belted_tunic", "long_blouse", "fitted_bodice",
         "laced_tunic", "sleeveless_surcoat",
         "bare_strapped", "hide_tunic",
+        "plate_cuirass", "ornate_cuirass", "dark_cuirass",
     )
 }
 
@@ -423,6 +492,7 @@ BOTTOMS = {
         "fitted_trousers", "plain_trousers", "knee_breeches", "simple_skirt",
         "long_skirt", "work_skirt_apron", "robe", "noble_skirt",
         "hide_loincloth", "hide_wrap",
+        "plate_greaves",
     )
 }
 
