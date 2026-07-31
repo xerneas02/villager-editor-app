@@ -10,12 +10,8 @@ import urllib.request
 from functools import lru_cache
 from pathlib import Path
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import to_rgb
-from PIL import Image
+from PIL import Image, ImageColor, ImageDraw, ImageFont
 
 
 def loads(data):
@@ -112,6 +108,11 @@ def face_colors(node, textures=()):
     return (color(node, textures),) * 6
 
 
+def rgb(shade):
+    value = np.asarray(ImageColor.getrgb(shade) if isinstance(shade, str) else shade, dtype=float)
+    return value * 255 if value.max() <= 1 else value
+
+
 def boxes(root):
     result = []
     textures = root.get("refs", {}).get("paintTextures", [])
@@ -187,7 +188,7 @@ def rasterize(cuboids, camera, center, radius, size=500):
             normal /= np.linalg.norm(normal)
             face_depth = (polygon.mean(axis=0) @ ground_camera - depth_low) / max(depth_high - depth_low, 1e-9)
             illumination = (.72 + .28 * max(0, np.dot(normal, light))) * (.80 + .20 * face_depth)
-            color = np.asarray(to_rgb(shade)) * 255 * illumination
+            color = rgb(shade) * illumination
             triangle(screen[indices[:3]], depths[indices[:3]], color)
             triangle(screen[[indices[0], indices[2], indices[3]]], depths[[indices[0], indices[2], indices[3]]], color)
     occlusion = np.zeros_like(depth_buffer)
@@ -210,6 +211,7 @@ def rasterizer_self_test():
     image = rasterize([cube(0, "#0000ff"), cube(-.4, "#ff0000")],
                       np.array((0, -1, 0)), np.zeros(3), 1, 32)
     assert image[16, 16, 0] > 150 and tuple(image[16, 16, 1:]) == (0, 0)
+    assert preview([cube(0, "#0000ff")], dpi=20).size == (380, 100)
 
 
 def reference_player(cuboids, horizontal=(-1, 0)):
@@ -238,15 +240,22 @@ def reference_player(cuboids, horizontal=(-1, 0)):
     ]
 
 
-def render(source, output, dpi=180, player_reference=False):
-    cuboids = boxes(load(source))
+def preview(cuboids, dpi=180, player_reference=False):
+    width, height = round(19 * dpi), round(5 * dpi)
+    tile_width, title_height = width // 5, max(24, round(.4 * dpi))
+    view_size = min(tile_width, height - title_height)
+    raster_size = min(500, view_size)
+    canvas = Image.new("RGB", (width, height), "#202020")
+    draw = ImageDraw.Draw(canvas)
+    try:
+        font = ImageFont.truetype("DejaVuSans.ttf", max(12, round(.18 * dpi)))
+    except OSError:
+        font = ImageFont.load_default()
 
-    figure = plt.figure(figsize=(19, 5), facecolor="#202020")
     for index, (title, elevation, azimuth) in enumerate((
         ("Front", 8, -90), ("Three-quarter front", 18, -55),
         ("Profile", 8, 0), ("Three-quarter back", 18, 55), ("Back", 8, 90),
-    ), 1):
-        axis = figure.add_subplot(1, 5, index)
+    )):
         elevation_rad, azimuth_rad = np.radians((elevation, azimuth))
         camera = np.array((np.cos(elevation_rad) * np.cos(azimuth_rad),
                            np.cos(elevation_rad) * np.sin(azimuth_rad), np.sin(elevation_rad)))
@@ -266,13 +275,20 @@ def render(source, output, dpi=180, player_reference=False):
         points = np.concatenate([corners for corners, _ in view_cuboids])[:, (0, 2, 1)]
         low, high = points.min(axis=0), points.max(axis=0)
         center, radius = (low + high) / 2, (high - low).max() / 2
-        axis.imshow(rasterize(view_cuboids, camera, center, radius), interpolation="lanczos")
-        axis.set_title(title, color="white")
-        axis.set_axis_off()
-        axis.set_facecolor("#202020")
-    figure.tight_layout(rect=(0, 0, 1, .94))
-    figure.savefig(output, dpi=dpi, facecolor=figure.get_facecolor())
-    plt.close(figure)
+        view = Image.fromarray(rasterize(view_cuboids, camera, center, radius, raster_size))
+        if raster_size != view_size:
+            view = view.resize((view_size, view_size), Image.Resampling.LANCZOS)
+        x = index * tile_width + (tile_width - view_size) // 2
+        y = title_height + (height - title_height - view_size) // 2
+        canvas.paste(view, (x, y))
+        box = draw.textbbox((0, 0), title, font=font)
+        draw.text((index * tile_width + (tile_width - box[2]) / 2, max(6, title_height * .18)),
+                  title, fill="white", font=font)
+    return canvas
+
+
+def render(source, output, dpi=180, player_reference=False):
+    preview(boxes(load(source)), dpi, player_reference).save(output)
 
 
 if __name__ == "__main__":
