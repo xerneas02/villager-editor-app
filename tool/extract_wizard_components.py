@@ -30,6 +30,37 @@ def find_with_world(root, name):
     raise ValueError(f"Groupe {name} introuvable")
 
 
+def find(root, name):
+    stack = [root]
+    while stack:
+        node = stack.pop()
+        if node.get("name") == name:
+            return node
+        stack.extend(node.get("children", []))
+    raise ValueError(f"Groupe {name} introuvable")
+
+
+def move_misplaced_hair_lock(source):
+    """Move the long negative-X side lock out of the animated jaw beard."""
+    hair = find(source, "Hair - wizard_original")
+    facial = find(source, "Facial Hair - wizard_original")
+    jaw = find(source, "Jaw Beard Rig")
+    lock = next((piece for piece in jaw["children"] if abs(piece["transforms"][4]) > 9), None)
+    if lock is None:
+        return False
+    jaw["children"].remove(lock)
+    world = multiply(facial["transforms"], multiply(jaw["transforms"], lock["transforms"]))
+    local = world[:]
+    for row in range(3):
+        scale = hair["transforms"][row * 4 + row]
+        for column in range(3):
+            local[row * 4 + column] /= scale
+        local[row * 4 + 3] = (world[row * 4 + 3] - hair["transforms"][row * 4 + 3]) / scale
+    lock["transforms"] = local
+    hair["children"].append(lock)
+    return True
+
+
 def clear_texture(piece, tone):
     piece["paintTexture"] = tone
     piece["defaultTextureValue"] = ""
@@ -74,11 +105,14 @@ def component(source, source_name, target_name, color, preserve=()):
 
 def main():
     source = load(SOURCE)
+    if move_misplaced_hair_lock(source):
+        write([source], SOURCE)
     hair = component(source, "Hair - wizard_original", "Hair - wizard_original", "#B8B5AE", PURPLE_BUN)
     beard = component(source, "Facial Hair - wizard_original", "Facial Hair - wizard_original", "#B8B5AE")
     write([hair], ROOT / "bdengine/characters/villagers/hair/villager_hair_wizard_original.bdengine")
     write([beard], ROOT / "bdengine/characters/villagers/facial_hair/beards/villager_beard_wizard_original.bdengine")
     assert sum(piece.get("paintTexture") == 3 for piece in hair["children"][0]["children"]) == 4
+    assert not any(abs(piece["transforms"][4]) > 9 for piece in find(source, "Jaw Beard Rig")["children"])
     print("Created wizard_original hair and beard")
 
 
