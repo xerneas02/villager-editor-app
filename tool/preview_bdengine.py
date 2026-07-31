@@ -142,6 +142,10 @@ def rasterize(cuboids, camera, center, radius, size=500):
     up = np.cross(camera, right)
     light = camera - right * .45 + up * .75
     light /= np.linalg.norm(light)
+    ground_camera = camera * (1, 1, 0)
+    ground_camera /= np.linalg.norm(ground_camera)
+    all_points = np.concatenate([corners[:, (0, 2, 1)] for corners, _ in cuboids])
+    depth_low, depth_high = np.min(all_points @ ground_camera), np.max(all_points @ ground_camera)
     scale = size / (radius * 2.2)
     image = np.full((size, size, 3), (32, 32, 32), dtype=np.uint8)
     depth_buffer = np.full((size, size), -np.inf)
@@ -181,10 +185,20 @@ def rasterize(cuboids, camera, center, radius, size=500):
                 continue
             indices = list(face)
             normal /= np.linalg.norm(normal)
-            illumination = .68 + .32 * max(0, np.dot(normal, light))
+            face_depth = (polygon.mean(axis=0) @ ground_camera - depth_low) / max(depth_high - depth_low, 1e-9)
+            illumination = (.72 + .28 * max(0, np.dot(normal, light))) * (.80 + .20 * face_depth)
             color = np.asarray(to_rgb(shade)) * 255 * illumination
             triangle(screen[indices[:3]], depths[indices[:3]], color)
             triangle(screen[[indices[0], indices[2], indices[3]]], depths[[indices[0], indices[2], indices[3]]], color)
+    occlusion = np.zeros_like(depth_buffer)
+    finite = np.isfinite(depth_buffer)
+    for offset in ((1, 0), (0, 1), (1, 1)):
+        neighbor = np.roll(depth_buffer, offset, axis=(0, 1))
+        valid = finite & np.roll(finite, offset, axis=(0, 1))
+        difference = np.zeros_like(depth_buffer)
+        np.subtract(neighbor, depth_buffer, out=difference, where=valid)
+        occlusion = np.maximum(occlusion, np.where(valid, np.clip(difference / (radius * .08), 0, 1), 0))
+    image = (image * (1 - occlusion[:, :, None] * .16)).astype(np.uint8)
     return image
 
 
