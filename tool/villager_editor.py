@@ -24,7 +24,7 @@ from generate_villager_waiting_animations import (
     PERSONALITIES as WAITING, add_animations as add_waiting, reparent_character, reparent_head,
 )
 from generate_villager_walking_animations import PROFILES as WALKING, add_animations as add_walking
-from preview_bdengine import boxes, load, loads, reference_player, render
+from preview_bdengine import boxes, load, loads, rasterizer_self_test, reference_player, render
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -423,6 +423,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def self_test():
+    rasterizer_self_test()
     sample = validate(CATALOG["presets"]["mira_farmer"])
     root = compose(sample)
     assert root["faceStyle"] == "feminine_thin_eyebrows"
