@@ -99,7 +99,7 @@ def build(style, color=None):
     pieces = []
     for side, sign in (("left", -1), ("right", 1)):
         pieces.append(hair_box(
-            f"{side}_socket", (sign * .43, 2.02, -.18), (.16, .12, .17), (0, 0, 0), first + 1,
+            f"{side}_socket", (sign * .40, 2.01, -.18), (.20, .16, .19), (0, 0, 0), first + 1,
         ))
         for name, center, size, tone, angle in STYLES[style]:
             pieces.append(hair_box(
