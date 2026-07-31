@@ -14,15 +14,17 @@ from urllib.parse import urlparse
 
 from generate_villager_action_animations import add_animations as add_actions, specifications
 from generate_villager_accessories import walk
-from generate_villager_body import BODY_TYPES
+from generate_villager_body import BODY_TYPES, group
 from generate_villager_clothing import PRESETS as OUTFIT_PRESETS, build as build_outfit
 from generate_villager_emotion_animations import EMOTIONS, add_animations as add_emotions
 from generate_villager_examples import build, write
 from generate_villager_population import APPEARANCE_OVERRIDES, COMMON, POPULATION, thin_eyebrows
 from generate_villager_talking_animations import PERSONALITIES as TALKING, add_animations as add_talking
-from generate_villager_waiting_animations import PERSONALITIES as WAITING, add_animations as add_waiting
+from generate_villager_waiting_animations import (
+    PERSONALITIES as WAITING, add_animations as add_waiting, reparent_character, reparent_head,
+)
 from generate_villager_walking_animations import PROFILES as WALKING, add_animations as add_walking
-from preview_bdengine import load, loads, render
+from preview_bdengine import boxes, load, loads, reference_player, render
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -32,7 +34,7 @@ EXPORT_DIR = ROOT / "bdengine" / "characters" / "villagers" / "custom"
 ACTION_SPECS = {f"{category.removesuffix('s')}_{name}": (category, name, profile)
                 for category, name, profile in specifications()}
 BUILD_LOCK = threading.Lock()
-PREVIEW_KEYS = ("gender", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory")
+PREVIEW_KEYS = ("gender", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "scaleHead")
 LAST_PREVIEW = None
 COMPONENT_IMPORTS = {
     "ears": ("heads/ears", "villager_ears_", "Ears -", "ears"),
@@ -71,6 +73,7 @@ def catalog():
             "accessory": accessory or "", "waiting": waiting, "talking": talking,
             "walking": walking, "emotions": list(emotions),
             "actions": list(dict.fromkeys(COMMON + extra)),
+            "scale": 1.0, "scaleMode": "uniform", "scaleHead": True,
         }
         presets[name].update(APPEARANCE_OVERRIDES.get(name, {}))
     return {
@@ -128,6 +131,21 @@ def validate(config):
         "talking": choice(config, "talking", CATALOG["animations"]["talking"]),
         "walking": choice(config, "walking", CATALOG["animations"]["walking"]),
     }
+    try:
+        scale = float(config.get("scale", 1))
+    except (TypeError, ValueError) as error:
+        raise ValueError("Échelle invalide") from error
+    if not .5 <= scale <= 10:
+        raise ValueError("L’échelle doit être comprise entre 0,5 et 10")
+    result["scale"] = scale
+    scale_mode = config.get("scaleMode", "uniform")
+    if scale_mode not in ("uniform", "vertical"):
+        raise ValueError("Mode d’échelle invalide")
+    result["scaleMode"] = scale_mode
+    scale_head = config.get("scaleHead", True)
+    if not isinstance(scale_head, bool):
+        raise ValueError("Option de tête invalide")
+    result["scaleHead"] = scale_head
     color_defaults = {"skinColor": "#ECB880", "pupilColor": "#424039"}
     for key, label in (("hairColor", "cheveux"), ("skinColor", "peau"), ("pupilColor", "pupilles")):
         color = str(config.get(key, color_defaults.get(key, "")))
@@ -145,6 +163,23 @@ def validate(config):
     return result
 
 
+def apply_scale(root, scale, mode, scale_head):
+    head = reparent_head(root)
+    character = reparent_character(root)
+    axes = (scale, scale, scale) if mode == "uniform" else (1, scale, 1)
+    scale_rig = group("Scale Rig", (0, 0, 0), [character])
+    scale_rig["transforms"] = [axes[0], 0, 0, 0, 0, axes[1], 0, 0, 0, 0, axes[2], 0, 0, 0, 0, 1]
+    scale_rig["defaultTransform"]["scale"] = list(axes)
+    root["children"][root["children"].index(character)] = scale_rig
+    if not scale_head:
+        inverse = tuple(1 / value for value in axes)
+        compensation = group("Head Scale Compensation", (0, 0, 0), head["children"])
+        compensation["transforms"] = [inverse[0], 0, 0, 0, 0, inverse[1], 0, 0, 0, 0, inverse[2], 0, 0, 0, 0, 1]
+        compensation["defaultTransform"]["scale"] = list(inverse)
+        head["children"] = [compensation]
+    root["characterScale"] = {"value": scale, "mode": mode, "head": scale_head}
+
+
 def compose(config, animated=True):
     model = (config["nose"], config["ears"], config["hair"], config["hairColor"],
              config["facialHair"], config["hat"], config["outfit"], config["accessory"])
@@ -157,6 +192,7 @@ def compose(config, animated=True):
         add_walking(root, (config["walking"],), generic_name=True)
         add_emotions(root, tuple(config["emotions"]))
         add_actions(root, [ACTION_SPECS[name] for name in config["actions"]])
+    apply_scale(root, config["scale"], config["scaleMode"], config["scaleHead"])
     root["name"] = config["name"]
     root["editorConfig"] = config
     root["editorAnimationCount"] = len(root.get("listAnim", []))
@@ -338,7 +374,7 @@ class Handler(BaseHTTPRequestHandler):
                     signature = tuple(config[key] for key in PREVIEW_KEYS)
                     if signature != LAST_PREVIEW or not (PREVIEW_DIR / "current_preview.png").exists():
                         write([compose(config, animated=False)], temporary)
-                        render(temporary, PREVIEW_DIR / "current_preview.png", dpi=100)
+                        render(temporary, PREVIEW_DIR / "current_preview.png", dpi=100, player_reference=True)
                         LAST_PREVIEW = signature
                     self.json_response({"preview": "/preview.png", "name": config["name"]})
                 else:
@@ -375,6 +411,19 @@ def self_test():
     assert goblin["bodyType"] == "goblin" and goblin["skinColor"] == "#424D3D"
     assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash"} <= set(goblin["actions"])
     assert CATALOG["presets"]["chubby_villager"]["bodyType"] == "chubby"
+    scaled = compose(validate({**CATALOG["presets"]["mira_farmer"], "scale": .5,
+                               "scaleMode": "uniform", "scaleHead": False}), animated=False)
+    assert next(node for node in walk(scaled) if node.get("name") == "Scale Rig")["defaultTransform"]["scale"] == [.5, .5, .5]
+    assert next(node for node in walk(scaled) if node.get("name") == "Head Scale Compensation")["defaultTransform"]["scale"] == [2, 2, 2]
+    player = reference_player(boxes(scaled))
+    player_y = [point[1] for corners, _ in player for point in corners]
+    assert min(player_y) == 0 and max(player_y) == 1.8
+    legacy = dict(CATALOG["presets"]["mira_farmer"])
+    for key in ("scale", "scaleMode", "scaleHead"):
+        legacy.pop(key)
+    assert {key: validate(legacy)[key] for key in ("scale", "scaleMode", "scaleHead")} == {
+        "scale": 1.0, "scaleMode": "uniform", "scaleHead": True,
+    }
     assert compose(validate({**CATALOG["presets"]["mira_farmer"], "outfit": "monster_warrior",
                              "bodyType": "brute", "hair": "bald", "hat": "", "facialHair": "",
                              "accessory": ""}), animated=False)

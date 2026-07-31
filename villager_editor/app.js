@@ -1,6 +1,6 @@
 const $ = (selector) => document.querySelector(selector);
 const state = { catalog: null, gender: "female", role: "farmer", previewTimer: null, request: 0 };
-const fields = ["name", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "waiting", "talking", "walking"];
+const fields = ["name", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "waiting", "talking", "walking"];
 
 function label(value) {
   return value.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -30,6 +30,8 @@ function selected(kind) {
 
 function config() {
   const result = Object.fromEntries(fields.map(id => [id, $("#" + id).value]));
+  result.scale = Number(result.scale);
+  result.scaleHead = $("#scaleHead").checked;
   result.gender = state.gender;
   result.role = state.role;
   result.emotions = selected("emotion");
@@ -42,11 +44,17 @@ function applyConfig(preset) {
   state.role = preset.role;
   fields.forEach(id => { if (preset[id] !== undefined) $("#" + id).value = preset[id]; });
   document.querySelectorAll("[data-gender]").forEach(button => button.classList.toggle("active", button.dataset.gender === state.gender));
-  document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+  $("#scaleHead").checked = preset.scaleHead ?? true;
+  document.querySelectorAll('input[data-kind]').forEach(input => {
     input.checked = input.dataset.kind === "emotion" ? preset.emotions.includes(input.value) : preset.actions.includes(input.value);
   });
+  updateScaleLabel();
   updateSummary();
   schedulePreview(0);
+}
+
+function updateScaleLabel() {
+  $("#scaleValue").textContent = `×${Number($("#scale").value).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function applyPreset(key) {
@@ -207,7 +215,10 @@ async function start() {
   }));
   ["nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory"]
     .forEach(id => $("#" + id).addEventListener("change", () => schedulePreview()));
-  document.querySelectorAll("#waiting, #talking, #walking, input[type=checkbox]")
+  $("#scale").addEventListener("input", () => { updateScaleLabel(); schedulePreview(); });
+  $("#scaleMode").addEventListener("change", () => schedulePreview(0));
+  $("#scaleHead").addEventListener("change", () => schedulePreview(0));
+  document.querySelectorAll("#waiting, #talking, #walking, input[data-kind]")
     .forEach(input => input.addEventListener("change", updateSummary));
   $("#name").addEventListener("input", updateSummary);
   $("#refresh").addEventListener("click", preview);

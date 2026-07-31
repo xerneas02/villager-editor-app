@@ -134,8 +134,31 @@ FACES = ((0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1),
          (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3))
 
 
-def render(source, output, dpi=180):
+def reference_player(cuboids):
+    points = np.concatenate([corners for corners, _ in cuboids])
+    low = points.min(axis=0)
+    origin = np.array((low[0] - .75, 0, low[2] - .75))
+
+    def part(center, size, shade):
+        center = origin + np.asarray(center)
+        half = np.asarray(size) / 2
+        corners = np.array([center + (x, y, z) * half for x in (-1, 1) for y in (-1, 1) for z in (-1, 1)])
+        return corners, (shade,) * 6
+
+    return [
+        part((-.14, .35, 0), (.25, .70, .25), "#34435E"),
+        part((.14, .35, 0), (.25, .70, .25), "#34435E"),
+        part((0, 1.05, 0), (.60, .70, .30), "#4C9291"),
+        part((-.40, 1.05, 0), (.20, .70, .25), "#C59469"),
+        part((.40, 1.05, 0), (.20, .70, .25), "#C59469"),
+        part((0, 1.55, 0), (.50, .50, .50), "#C59469"),
+    ]
+
+
+def render(source, output, dpi=180, player_reference=False):
     cuboids = boxes(load(source))
+    if player_reference:
+        cuboids.extend(reference_player(cuboids))
     points = np.concatenate([corners for corners, _ in cuboids])
     # Matplotlib uses Z as vertical; BDEngine uses Y.
     points = points[:, (0, 2, 1)]

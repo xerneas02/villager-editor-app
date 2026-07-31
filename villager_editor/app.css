@@ -46,6 +46,14 @@ input[type="file"] { width: 100%; padding: 9px; border: 1px solid var(--line); b
 .grid.two { grid-template-columns: 1fr 1fr; }
 .grid.three { grid-template-columns: repeat(3, 1fr); }
 .body-type-control { margin-bottom: 13px; padding: 12px; border: 1px solid var(--accent-2); border-radius: 5px; background: rgba(212, 168, 79, .07); color: var(--text); }
+.scale-control { margin-bottom: 13px; }
+.scale-control > span { display: flex; justify-content: space-between; color: var(--text); }
+.scale-control output { color: var(--accent); font-family: ui-monospace, monospace; }
+.scale-control input { width: 100%; accent-color: var(--accent); }
+.scale-limits { display: flex; justify-content: space-between; color: var(--muted); font: 10px ui-monospace, monospace; }
+.scale-options { margin-bottom: 13px; }
+.toggle { display: flex; grid-auto-flow: column; align-items: center; justify-content: start; gap: 9px; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #151713; }
+.toggle input { accent-color: var(--accent); }
 .segmented { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
 .segmented button { padding: 9px; border: 0; color: var(--muted); background: #151713; cursor: pointer; }
 .segmented button.active { color: #171b0f; background: var(--accent); font-weight: 800; }
