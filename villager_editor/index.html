@@ -64,6 +64,11 @@
           </label>
           <label class="toggle"><input id="scaleHead" type="checkbox" checked>La tête suit l’échelle</label>
         </div>
+        <label id="headScaleControl" class="scale-control disabled">
+          <span>Échelle indépendante de la tête <output id="headScaleValue">×1,00</output></span>
+          <input id="headScale" type="range" min="0.5" max="10" step="0.05" value="1" disabled>
+          <span class="scale-limits"><span>0,5</span><span>10,0</span></span>
+        </label>
         <div class="grid two">
           <label>Vêtement<select id="outfit"></select></label>
           <label>Accessoire<select id="accessory"></select></label>
@@ -123,7 +128,7 @@
         <div><span>RÔLE</span><strong id="summaryRole">Farmer</strong></div>
         <div><span>ANIMATIONS</span><strong id="summaryAnimations">0</strong></div>
       </div>
-      <p class="stage-note">Le personnage coloré à côté du modèle mesure toujours 1,8 bloc. Il sert uniquement de référence et n’est jamais exporté.</p>
+      <p class="stage-note">La silhouette à côté du modèle mesure toujours 1,8 bloc. Elle sert uniquement de référence et n’est jamais exportée.</p>
     </section>
   </main>
 

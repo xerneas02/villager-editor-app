@@ -51,6 +51,7 @@ input[type="file"] { width: 100%; padding: 9px; border: 1px solid var(--line); b
 .scale-control output { color: var(--accent); font-family: ui-monospace, monospace; }
 .scale-control input { width: 100%; accent-color: var(--accent); }
 .scale-limits { display: flex; justify-content: space-between; color: var(--muted); font: 10px ui-monospace, monospace; }
+.scale-control.disabled { opacity: .42; }
 .scale-options { margin-bottom: 13px; }
 .toggle { display: flex; grid-auto-flow: column; align-items: center; justify-content: start; gap: 9px; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #151713; }
 .toggle input { accent-color: var(--accent); }

@@ -134,10 +134,14 @@ FACES = ((0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1),
          (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3))
 
 
-def reference_player(cuboids):
+def reference_player(cuboids, horizontal=(-1, 0)):
     points = np.concatenate([corners for corners, _ in cuboids])
-    low = points.min(axis=0)
-    origin = np.array((low[0] - .75, 0, low[2] - .75))
+    low, high = points.min(axis=0), points.max(axis=0)
+    direction = np.asarray(horizontal, dtype=float)
+    direction /= np.linalg.norm(direction)
+    center = (low + high) / 2
+    distance = max(high[0] - low[0], high[2] - low[2]) / 2 + .8
+    origin = np.array((center[0] + direction[0] * distance, low[1], center[2] + direction[1] * distance))
 
     def part(center, size, shade):
         center = origin + np.asarray(center)
@@ -146,24 +150,17 @@ def reference_player(cuboids):
         return corners, (shade,) * 6
 
     return [
-        part((-.14, .35, 0), (.25, .70, .25), "#34435E"),
-        part((.14, .35, 0), (.25, .70, .25), "#34435E"),
-        part((0, 1.05, 0), (.60, .70, .30), "#4C9291"),
-        part((-.40, 1.05, 0), (.20, .70, .25), "#C59469"),
-        part((.40, 1.05, 0), (.20, .70, .25), "#C59469"),
-        part((0, 1.55, 0), (.50, .50, .50), "#C59469"),
+        part((-.14, .35, 0), (.25, .70, .25), "#555955"),
+        part((.14, .35, 0), (.25, .70, .25), "#555955"),
+        part((0, 1.05, 0), (.60, .70, .30), "#555955"),
+        part((-.40, 1.05, 0), (.20, .70, .25), "#555955"),
+        part((.40, 1.05, 0), (.20, .70, .25), "#555955"),
+        part((0, 1.55, 0), (.50, .50, .50), "#555955"),
     ]
 
 
 def render(source, output, dpi=180, player_reference=False):
     cuboids = boxes(load(source))
-    if player_reference:
-        cuboids.extend(reference_player(cuboids))
-    points = np.concatenate([corners for corners, _ in cuboids])
-    # Matplotlib uses Z as vertical; BDEngine uses Y.
-    points = points[:, (0, 2, 1)]
-    low, high = points.min(axis=0), points.max(axis=0)
-    center, radius = (low + high) / 2, (high - low).max() / 2
 
     figure = plt.figure(figsize=(19, 5), facecolor="#202020")
     for index, (title, elevation, azimuth) in enumerate((
@@ -173,9 +170,15 @@ def render(source, output, dpi=180, player_reference=False):
         axis = figure.add_subplot(1, 5, index, projection="3d")
         polygons, colors = [], []
         elevation_rad, azimuth_rad = np.radians((elevation, azimuth))
+        view_cuboids = cuboids + (reference_player(
+            cuboids, (np.sin(azimuth_rad), -np.cos(azimuth_rad))
+        ) if player_reference else [])
+        points = np.concatenate([corners for corners, _ in view_cuboids])[:, (0, 2, 1)]
+        low, high = points.min(axis=0), points.max(axis=0)
+        center, radius = (low + high) / 2, (high - low).max() / 2
         camera = np.array((np.cos(elevation_rad) * np.cos(azimuth_rad),
                            np.cos(elevation_rad) * np.sin(azimuth_rad), np.sin(elevation_rad)))
-        for corners, shades in cuboids:
+        for corners, shades in view_cuboids:
             corners = corners[:, (0, 2, 1)]
             cuboid_center = corners.mean(axis=0)
             for face, shade in zip(FACES, shades):

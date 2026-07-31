@@ -1,6 +1,6 @@
 const $ = (selector) => document.querySelector(selector);
 const state = { catalog: null, gender: "female", role: "farmer", previewTimer: null, request: 0 };
-const fields = ["name", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "waiting", "talking", "walking"];
+const fields = ["name", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking"];
 
 function label(value) {
   return value.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -31,6 +31,7 @@ function selected(kind) {
 function config() {
   const result = Object.fromEntries(fields.map(id => [id, $("#" + id).value]));
   result.scale = Number(result.scale);
+  result.headScale = Number(result.headScale);
   result.scaleHead = $("#scaleHead").checked;
   result.gender = state.gender;
   result.role = state.role;
@@ -49,12 +50,20 @@ function applyConfig(preset) {
     input.checked = input.dataset.kind === "emotion" ? preset.emotions.includes(input.value) : preset.actions.includes(input.value);
   });
   updateScaleLabel();
+  updateHeadScale();
   updateSummary();
   schedulePreview(0);
 }
 
 function updateScaleLabel() {
   $("#scaleValue").textContent = `×${Number($("#scale").value).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function updateHeadScale() {
+  const independent = !$("#scaleHead").checked;
+  $("#headScale").disabled = !independent;
+  $("#headScaleControl").classList.toggle("disabled", !independent);
+  $("#headScaleValue").textContent = `×${Number($("#headScale").value).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function applyPreset(key) {
@@ -216,8 +225,9 @@ async function start() {
   ["nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory"]
     .forEach(id => $("#" + id).addEventListener("change", () => schedulePreview()));
   $("#scale").addEventListener("input", () => { updateScaleLabel(); schedulePreview(); });
+  $("#headScale").addEventListener("input", () => { updateHeadScale(); schedulePreview(); });
   $("#scaleMode").addEventListener("change", () => schedulePreview(0));
-  $("#scaleHead").addEventListener("change", () => schedulePreview(0));
+  $("#scaleHead").addEventListener("change", () => { updateHeadScale(); schedulePreview(0); });
   document.querySelectorAll("#waiting, #talking, #walking, input[data-kind]")
     .forEach(input => input.addEventListener("change", updateSummary));
   $("#name").addEventListener("input", updateSummary);
