@@ -143,22 +143,27 @@ def thin_eyebrows(root):
 def pupils(root, style):
     if style not in PUPILS:
         raise ValueError(f"Unknown pupil style: {style}")
+
+    def resize(piece, x, y, offset=0):
+        height = piece["transforms"][5]
+        piece["transforms"] = scale_columns(piece["transforms"], x=x, y=y)
+        piece["transforms"][7] += height * (offset - (1 - y) / 4)
+
     for eye in (find(root, "left_eye"), find(root, "right_eye")):
         source = eye["children"][0]
         if style == "small":
-            source["transforms"] = scale_columns(source["transforms"], x=.62, y=.62)
+            resize(source, .62, .62)
         elif style == "vertical_slit":
-            source["transforms"] = scale_columns(source["transforms"], x=.30, y=.96)
+            resize(source, .30, .96)
         elif style == "horizontal_slit":
-            source["transforms"] = scale_columns(source["transforms"], x=.94, y=.28)
+            resize(source, .94, .28)
         elif style == "large":
-            source["transforms"] = scale_columns(source["transforms"], x=1.14, y=1.08)
+            resize(source, 1.14, 1.08)
         elif style == "round":
             pieces = []
             for offset, width, height in ((-.14, .38, .25), (0, .72, .38), (.14, .38, .25)):
                 piece = copy.deepcopy(source)
-                piece["transforms"] = scale_columns(piece["transforms"], x=width, y=height)
-                piece["transforms"][7] += offset * source["transforms"][5]
+                resize(piece, width, height, offset)
                 pieces.append(piece)
             eye["children"] = pieces
     root["pupilStyle"] = style

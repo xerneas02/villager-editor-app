@@ -514,10 +514,15 @@ def self_test():
     assert len(next(node for node in walk(unicorn) if node.get("name") == "Horns - unicorn")["children"]) == 6
     earless = compose(validate({**sample, "ears": "none"}), animated=False)
     assert not next(node for node in walk(earless) if node.get("name") == "Ears - none")["children"]
+    default_pupil = next(node for node in walk(root) if node.get("name") == "left_eye")["children"][0]["transforms"]
+    default_pupil_center = default_pupil[7] - default_pupil[5] / 4
     for style in PUPILS:
         face = compose(validate({**sample, "pupilStyle": style}), animated=False)
         assert all(len(next(node for node in walk(face) if node.get("name") == eye)["children"]) == (3 if style == "round" else 1)
                    for eye in ("left_eye", "right_eye"))
+        pieces = next(node for node in walk(face) if node.get("name") == "left_eye")["children"]
+        centers = [piece["transforms"][7] - piece["transforms"][5] / 4 for piece in pieces]
+        assert abs(sum(centers) / len(centers) - default_pupil_center) < 1e-9
     tailed = compose(validate({**sample, "tail": "fox"}), animated=False)
     body = next(node for node in walk(tailed) if node.get("name") == "Body Structure")
     assert any(node.get("name") == "Tail - fox" for node in body["children"])
