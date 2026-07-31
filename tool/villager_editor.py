@@ -37,14 +37,16 @@ BUILD_LOCK = threading.Lock()
 PREVIEW_KEYS = ("eyebrows", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "facialHair", "hat", "bodyType", "outfit", "accessory", "scale", "scaleMode", "scaleHead", "headScale")
 LAST_PREVIEW = None
 DEFAULT_HEIGHT = 1.9
+ADULT_HEIGHTS = {"female": 1.8, "male": 2.05}
 PRESET_PROPORTIONS = {
     "alder_farmer": {"scale": 1.88},
-    "elise_smith": {"scale": 1.72, "scaleHead": False, "headScale": .9},
+    "elise_smith": {"scale": 1.42, "scaleHead": False, "headScale": .88},
     "bran_blacksmith": {"scale": 2.18},
     "edric_lord": {"scale": 2.16},
     "lyra_huntress": {"scale": 1.84},
     "goblin_raider": {"scale": 1.52},
     "chubby_villager": {"scale": 2.28},
+    "luc_shepherd": {"scale": 1.48, "scaleHead": False, "headScale": .9},
 }
 COMPONENT_IMPORTS = {
     "ears": ("heads/ears", "villager_ears_", "Ears -", "ears"),
@@ -102,7 +104,7 @@ def catalog():
             "accessory": accessory or "", "waiting": waiting, "talking": talking,
             "walking": walking, "emotions": list(emotions),
             "actions": list(dict.fromkeys(COMMON + extra)),
-            "scale": DEFAULT_HEIGHT, "scaleMode": "uniform", "scaleHead": True, "headScale": 1.0,
+            "scale": ADULT_HEIGHTS[gender], "scaleMode": "uniform", "scaleHead": True, "headScale": 1.0,
         }
         presets[name].update(PRESET_PROPORTIONS.get(name, {}))
         presets[name].update(APPEARANCE_OVERRIDES.get(name, {}))
@@ -460,6 +462,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def self_test():
     rasterizer_self_test()
+    assert all(validate(preset) for preset in CATALOG["presets"].values())
     sample = validate(CATALOG["presets"]["mira_farmer"])
     root = compose(sample)
     assert root["faceStyle"] == "feminine_thin_eyebrows"
@@ -496,6 +499,11 @@ def self_test():
     assert CATALOG["presets"]["chubby_villager"]["bodyType"] == "chubby"
     assert abs(sum(preset["scale"] for preset in CATALOG["presets"].values()) /
                len(CATALOG["presets"]) - 1.9) < .02
+    women = [preset["scale"] for preset in CATALOG["presets"].values() if preset["gender"] == "female"]
+    men = [preset["scale"] for preset in CATALOG["presets"].values() if preset["gender"] == "male"]
+    assert sum(women) / len(women) < sum(men) / len(men) - .15
+    for child in ("elise_smith", "luc_shepherd"):
+        assert CATALOG["presets"][child]["scale"] < 1.5 and not CATALOG["presets"][child]["scaleHead"]
     assert CATALOG["presets"]["goblin_raider"]["scale"] == 1.52
     assert CATALOG["presets"]["chubby_villager"]["scale"] == 2.28
     assert CATALOG["presets"]["elise_smith"]["scaleHead"] is False

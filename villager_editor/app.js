@@ -221,7 +221,8 @@ function randomize() {
   };
   const large = !child && !monster && Math.random() < .12;
   const range = child ? [1.2, 1.55] : large ? [2.15, 2.4] : (ranges[base] || ranges.standard);
-  $("#scale").value = (range[0] + Math.random() * (range[1] - range[0])).toFixed(2);
+  const genderOffset = child || monster ? 0 : state.gender === "female" ? -.1 : .05;
+  $("#scale").value = (range[0] + Math.random() * (range[1] - range[0]) + genderOffset).toFixed(2);
   $("#scaleMode").value = "uniform";
   $("#scaleHead").checked = !child;
   $("#headScale").value = child ? (.78 + Math.random() * .12).toFixed(2) : 1;
