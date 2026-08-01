@@ -20,6 +20,53 @@ ANIMATION_ROOT = ROOT / "bdengine" / "characters" / "villagers" / "animations"
 RUN_SPEED_MULTIPLIER = 2
 RUN_STRIDE_MULTIPLIER = 1.35
 
+def jump_profile(duration, height, lean, stride, arm):
+    """A complete take-off, airborne pose and landing, tuned by approach speed."""
+    times = tuple(round(duration * ratio) for ratio in (0, .17, .31, .5, .69, .84, 1))
+
+    def poses(*rotations):
+        return [(time,) if rotation is None else (time, rotation)
+                for time, rotation in zip(times, rotations)]
+
+    return {
+        "duration": duration, "upper_motion": True,
+        "body_motion": [
+            (times[0], (lean, 0, 0), (0, 0, 0)),
+            (times[1], (lean + 7, 0, 0), (0, -.07, 0)),
+            (times[2], (lean - 3, 0, 0), (0, height * .35, 0)),
+            (times[3], (lean, 0, 0), (0, height, 0)),
+            (times[4], (lean + 2, 0, 0), (0, height * .55, 0)),
+            (times[5], (lean + 9, 0, 0), (0, -.055, 0)),
+            (times[6], (0, 0, 0), (0, 0, 0)),
+        ],
+        "head": poses(None, (-5, 0, 0), (4, 0, 0), (1, -stride * .08, 0),
+                      (4, stride * .05, 0), (-7, 0, 0), None),
+        "left_leg": poses(None, (-30, 0, -2), (-8, 0, 0), (-20 - stride, 0, -4),
+                          (-16 - stride * .45, 0, -2), (-34, 0, -3), None),
+        "right_leg": poses(None, (-30, 0, 2), (-8, 0, 0), (-20 + stride, 0, 4),
+                           (-16 + stride * .45, 0, 2), (-34, 0, 3), None),
+        "left_knee": poses(None, (58, 0, 0), (18, 0, 0), (50 + stride * .35, 0, 0),
+                           (38 + stride * .2, 0, 0), (72, 0, 0), None),
+        "right_knee": poses(None, (58, 0, 0), (18, 0, 0), (50 - stride * .35, 0, 0),
+                            (38 - stride * .2, 0, 0), (72, 0, 0), None),
+        "left_ankle": poses(None, (-12, 0, 0), (18, 0, 0), (-8, 0, 0),
+                            (-4, 0, 0), (-18, 0, 0), None),
+        "right_ankle": poses(None, (-12, 0, 0), (18, 0, 0), (6, 0, 0),
+                             (2, 0, 0), (-18, 0, 0), None),
+        "left_arm": poses(None, (arm * .45, 0, -8), (-arm, 0, -10),
+                          (-arm * 1.12 - stride * .35, 0, -12), (-arm * .75, 0, -8),
+                          (18, 0, -5), None),
+        "right_arm": poses(None, (arm * .45, 0, 8), (-arm, 0, 10),
+                           (-arm * 1.12 + stride * .2, 0, 12), (-arm * .75, 0, 8),
+                           (18, 0, 5), None),
+        "left_elbow": poses(None, (-24, 0, 0), (-35, 0, 0), (-28, 0, 0),
+                            (-34, 0, 0), (-45, 0, 0), None),
+        "right_elbow": poses(None, (-24, 0, 0), (-35, 0, 0), (-28, 0, 0),
+                             (-34, 0, 0), (-45, 0, 0), None),
+        "left_wrist": poses(None, (8, 0, 0), (12, 0, 0), (8, 0, 0), (6, 0, 0), (10, 0, 0), None),
+        "right_wrist": poses(None, (8, 0, 0), (12, 0, 0), (8, 0, 0), (6, 0, 0), (10, 0, 0), None),
+    }
+
 ACTIONS = {
     "gestures": {
         "wave": {"duration": 32, "head": [(0,), (6, (0, 8, 2)), (26, (0, 8, 2)), (32,)],
@@ -54,6 +101,9 @@ ACTIONS = {
                 "right_arm": [(0,), (9, (-72, 0, 10)), (41, (-72, 0, 10)), (50,)]},
     },
     "locomotion": {
+        "jump": jump_profile(36, .34, 2, 0, 72),
+        "walking_jump": jump_profile(32, .30, 7, 18, 68),
+        "running_jump": jump_profile(28, .42, 14, 34, 84),
         "running": {"duration": 24,
                     "body_motion": [(0, (9, 0, 2), (.018, .025, 0)), (3, (12, 0, 0), (0, -.015, 0)), (6, (8, 0, -2), (-.018, .135, 0)), (9, (10, 0, -1), (-.01, .06, 0)), (12, (9, 0, -2), (-.018, .025, 0)), (15, (12, 0, 0), (0, -.015, 0)), (18, (8, 0, 2), (.018, .135, 0)), (21, (10, 0, 1), (.01, .06, 0)), (24, (9, 0, 2), (.018, .025, 0))],
                     "head": [(0, (3, -3, -1)), (3, (5, 0, 0)), (6, (1, 3, 1)), (9, (3, 1, 0)), (12, (3, 3, 1)), (15, (5, 0, 0)), (18, (1, -3, -1)), (21, (3, -1, 0)), (24, (3, -3, -1))],

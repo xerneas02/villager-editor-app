@@ -546,6 +546,15 @@ def self_test():
                                                      "left_elbow", "right_elbow", "left_wrist", "right_wrist"))
     assert all(pose[1][0] < 0 for pose in running["left_elbow"])
     assert max(pose[2][1] for pose in running["body_motion"]) >= .13
+    jumps = [ACTION_SPECS[f"locomotion_{name}"][2]
+             for name in ("jump", "walking_jump", "running_jump")]
+    assert [jump["duration"] for jump in jumps] == [36, 32, 28]
+    assert [max(pose[2][1] for pose in jump["body_motion"]) for jump in jumps] == [.34, .3, .42]
+    assert all(all(joint in jump for joint in ("left_leg", "right_leg", "left_knee", "right_knee",
+                                                "left_ankle", "right_ankle", "left_elbow", "right_elbow"))
+               for jump in jumps)
+    assert max(abs(pose[1][0]) for pose in jumps[2]["left_leg"] if len(pose) > 1) > \
+           max(abs(pose[1][0]) for pose in jumps[1]["left_leg"] if len(pose) > 1)
     walking_animation = next(item for item in root["listAnim"] if item["name"] == "walking")
     walking_field = animation_field(walking_animation["id"])
     assert min(key["rotation"]["x"] for key in next(

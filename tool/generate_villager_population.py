@@ -26,6 +26,7 @@ SIT = ("daily_sit_enter", "daily_sit_loop", "daily_sit_exit")
 KNEEL = ("daily_kneel_enter", "daily_kneel_loop", "daily_kneel_exit")
 SLEEP = ("daily_sleep_enter", "daily_sleep_loop", "daily_sleep_exit")
 COMMON = ("gesture_yes", "gesture_no", "gesture_wave", "reaction_hurt", "reaction_alert",
+          "locomotion_jump", "locomotion_walking_jump", "locomotion_running_jump",
           *SIT, *SLEEP, "daily_eat", "daily_drink", "daily_pick_up", "daily_put_down")
 FARMER = ("profession_hoe", "profession_sow", "profession_harvest", "locomotion_carrying_walk")
 SMITH = ("profession_hammer", "locomotion_carrying_walk")
