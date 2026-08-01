@@ -549,8 +549,7 @@ def self_test():
     jumps = [ACTION_SPECS[f"locomotion_{name}"][2]
              for name in ("jump", "walking_jump", "running_jump")]
     assert [jump["duration"] for jump in jumps] == [36, 32, 28]
-    assert [max(pose[2][1] for pose in jump["body_motion"]) for jump in jumps] == [.34, .3, .42]
-    assert all(jump["body_motion"][2][2][1] == jump["body_motion"][4][2][1] for jump in jumps)
+    assert all(all(pose[2] == (0, 0, 0) for pose in jump["body_motion"]) for jump in jumps)
     assert all(all(joint in jump for joint in ("left_leg", "right_leg", "left_knee", "right_knee",
                                                 "left_ankle", "right_ankle", "left_elbow", "right_elbow"))
                for jump in jumps)

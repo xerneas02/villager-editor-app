@@ -20,7 +20,7 @@ ANIMATION_ROOT = ROOT / "bdengine" / "characters" / "villagers" / "animations"
 RUN_SPEED_MULTIPLIER = 2
 RUN_STRIDE_MULTIPLIER = 1.35
 
-def jump_profile(duration, height, lean, stride, arm):
+def jump_profile(duration, lean, stride, arm):
     """A complete take-off, airborne pose and landing, tuned by approach speed."""
     times = tuple(round(duration * ratio) for ratio in (0, .17, .31, .5, .69, .84, 1))
     approach = min(1, stride / 34)
@@ -33,11 +33,11 @@ def jump_profile(duration, height, lean, stride, arm):
         "duration": duration, "upper_motion": True,
         "body_motion": [
             (times[0], (lean, 0, 0), (0, 0, 0)),
-            (times[1], (lean + 7, 0, 0), (0, -.07, 0)),
-            (times[2], (lean - 3, 0, 0), (0, height * .35, 0)),
-            (times[3], (lean, 0, 0), (0, height, 0)),
-            (times[4], (lean + 2, 0, 0), (0, height * .35, 0)),
-            (times[5], (lean + 9, 0, 0), (0, -.055, 0)),
+            (times[1], (lean + 7, 0, 0), (0, 0, 0)),
+            (times[2], (lean - 3, 0, 0), (0, 0, 0)),
+            (times[3], (lean, 0, 0), (0, 0, 0)),
+            (times[4], (lean + 2, 0, 0), (0, 0, 0)),
+            (times[5], (lean + 9, 0, 0), (0, 0, 0)),
             (times[6], (0, 0, 0), (0, 0, 0)),
         ],
         "head": poses(None, (-5, 0, 0), (4, 0, 0), (1, -stride * .08, 0),
@@ -159,9 +159,9 @@ ACTIONS = {
                 "left_ankle": [(0,), (8, (-9, 0, 0)), (20, (-11, 0, 0)), (36, (-9, 0, 0)), (42, (-6, 0, 0)), (50,)], "right_ankle": [(0,), (8, (-8, 0, 0)), (20, (-10, 0, 0)), (36, (-8, 0, 0)), (42, (-6, 0, 0)), (50,)]},
     },
     "locomotion": {
-        "jump": jump_profile(36, .34, 2, 0, 72),
-        "walking_jump": jump_profile(32, .30, 7, 18, 68),
-        "running_jump": jump_profile(28, .42, 14, 34, 84),
+        "jump": jump_profile(36, 2, 0, 72),
+        "walking_jump": jump_profile(32, 7, 18, 68),
+        "running_jump": jump_profile(28, 14, 34, 84),
         "running": {"duration": 24,
                     "body_motion": [(0, (9, 0, 2), (.018, .025, 0)), (3, (12, 0, 0), (0, -.015, 0)), (6, (8, 0, -2), (-.018, .135, 0)), (9, (10, 0, -1), (-.01, .06, 0)), (12, (9, 0, -2), (-.018, .025, 0)), (15, (12, 0, 0), (0, -.015, 0)), (18, (8, 0, 2), (.018, .135, 0)), (21, (10, 0, 1), (.01, .06, 0)), (24, (9, 0, 2), (.018, .025, 0))],
                     "head": [(0, (3, -3, -1)), (3, (5, 0, 0)), (6, (1, 3, 1)), (9, (3, 1, 0)), (12, (3, 3, 1)), (15, (5, 0, 0)), (18, (1, -3, -1)), (21, (3, -1, 0)), (24, (3, -3, -1))],
