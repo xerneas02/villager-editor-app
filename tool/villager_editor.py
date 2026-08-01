@@ -555,6 +555,10 @@ def self_test():
     ground_actions = ("daily_sit", "daily_kneel", "daily_sleep")
     assert all(ACTION_SPECS[action][2]["left_elbow"][1][1][0] < 0
                for action in ("daily_sit", "daily_kneel", "daily_sleep"))
+    kneel = ACTION_SPECS["daily_kneel"][2]
+    assert kneel["left_knee"][2][1][0] > kneel["right_knee"][2][1][0]
+    assert kneel["left_knee"][4][1] == kneel["right_knee"][4][1]
+    assert kneel["left_arm"][4][1][0] == ACTION_SPECS["daily_sit"][2]["left_arm"][1][1][0]
     ground_root = compose({**sample, "actions": list(ground_actions)})
     for action in ground_actions:
         animation = next(item for item in ground_root["listAnim"] if item["name"] == action)
@@ -565,6 +569,11 @@ def self_test():
         for joint in ("left_elbow", "right_elbow"):
             elbow = next(node for node in walk(ground_root) if node.get("name") == joint)
             assert min(key["rotation"]["x"] for key in elbow[field]) >= 0
+        if action == "daily_kneel":
+            left_leg = next(node for node in walk(ground_root) if node.get("name") == "left_leg")[field]
+            left_knee = next(node for node in walk(ground_root) if node.get("name") == "left_knee")[field]
+            assert next(key for key in left_leg if key["time"] == 46)["rotation"]["x"] > 0
+            assert next(key for key in left_knee if key["time"] == 46)["rotation"]["x"] < 0
     assert all(any(key == "animation" or key.startswith("animation_")
                    for key in next(node for node in walk(root) if node.get("name") == joint))
                for joint in ("left_knee", "right_knee", "left_ankle", "right_ankle",
