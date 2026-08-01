@@ -550,9 +550,17 @@ def self_test():
              for name in ("jump", "walking_jump", "running_jump")]
     assert [jump["duration"] for jump in jumps] == [36, 32, 28]
     assert [max(pose[2][1] for pose in jump["body_motion"]) for jump in jumps] == [.34, .3, .42]
+    assert all(jump["body_motion"][2][2][1] == jump["body_motion"][4][2][1] for jump in jumps)
     assert all(all(joint in jump for joint in ("left_leg", "right_leg", "left_knee", "right_knee",
                                                 "left_ankle", "right_ankle", "left_elbow", "right_elbow"))
                for jump in jumps)
+    assert all([pose[1][0] if len(pose) > 1 else None for pose in jumps[0][joint]] ==
+               [pose[1][0] if len(pose) > 1 else None for pose in jumps[0][joint.replace("left_", "right_")]]
+               for joint in ("left_leg", "left_knee", "left_ankle", "left_elbow", "left_wrist"))
+    assert all(jump["left_knee"][2][1][0] > jump["right_knee"][2][1][0] for jump in jumps[1:])
+    assert jumps[2]["left_knee"][2][1][0] - jumps[2]["right_knee"][2][1][0] > \
+           jumps[1]["left_knee"][2][1][0] - jumps[1]["right_knee"][2][1][0]
+    assert all(jump["left_knee"][5][1][0] > jump["left_knee"][4][1][0] for jump in jumps)
     assert max(abs(pose[1][0]) for pose in jumps[2]["left_leg"] if len(pose) > 1) > \
            max(abs(pose[1][0]) for pose in jumps[1]["left_leg"] if len(pose) > 1)
     articulated = [profile for category, _, profile in specifications()
