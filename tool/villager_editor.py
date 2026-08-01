@@ -713,6 +713,14 @@ def self_test():
     assert {f"waiting_{style}" for style in WAITING if style != sample["waiting"]} <= set(all_names)
     assert {f"talking_{style}" for style in TALKING if style != sample["talking"]} <= set(all_names)
     assert {f"walking_{style}" for style in WALKING if style != sample["walking"]} <= set(all_names)
+    acting = [animation for animation in all_root["listAnim"]
+              if animation["name"].startswith(("waiting", "talking"))]
+    joints = [next(node for node in walk(all_root) if node.get("name") == name)
+              for name in ("left_elbow", "right_elbow", "left_wrist", "right_wrist",
+                           "left_knee", "right_knee", "left_ankle", "right_ankle")]
+    assert all(animation_field(animation["id"]) in joint for animation in acting for joint in joints)
+    assert len({tuple(round(joint[animation_field(animation["id"])][1]["rotation"]["x"], 4)
+                      for joint in joints) for animation in acting}) == len(acting)
     assert all_root["editorAnimationCount"] == len(WAITING) + len(TALKING) + len(WALKING) + len(sample["emotions"]) + len(sample["actions"])
     special_animations = {"monster", "villain", "idiot", "barbarian"}
     assert special_animations <= set(WAITING) & set(TALKING) & set(WALKING)

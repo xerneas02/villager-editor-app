@@ -21,6 +21,8 @@ ANIMATION_DIR = ROOT / "bdengine" / "characters" / "villagers" / "animations" / 
 HEAD_PIVOT = (0, 1.72, -.22)
 UPPER_BODY_PIVOT = (0, .88, -.22)
 ANIMATION_INTENSITY = 1.5
+JOINTS = ("left_elbow", "right_elbow", "left_wrist", "right_wrist",
+          "left_knee", "right_knee", "left_ankle", "right_ankle")
 
 PERSONALITIES = {
     "calm": {
@@ -111,6 +113,58 @@ PERSONALITIES = {
         "blinks": (27, 59), "gaze": ((11, -.05), (31, .05), (52, 0)),
     },
 }
+
+# Two asymmetric accents per loop keep the limbs alive without competing with
+# the personality's larger head and shoulder acting.
+ARTICULATIONS = {
+    "calm": (
+        ((8, 0, 0), (10, 0, 0), (4, 0, -2), (4, 0, 2), (4, 0, 0), (6, 0, 0), (-2, 0, 0), (-3, 0, 0)),
+        ((10, 0, 0), (8, 0, 0), (5, 0, 1), (5, 0, -1), (6, 0, 0), (4, 0, 0), (-3, 0, 0), (-2, 0, 0)),
+    ),
+    "hardworking": (
+        ((18, 0, 0), (30, 0, 0), (8, -3, -4), (14, 3, 5), (10, 0, 0), (18, 0, 0), (-5, 0, 0), (-9, 0, 0)),
+        ((30, 0, 0), (16, 0, 0), (14, 3, 5), (7, -3, -4), (19, 0, 0), (8, 0, 0), (-10, 0, 0), (-4, 0, 0)),
+    ),
+    "nervous": (
+        ((48, 0, 0), (58, 0, 0), (18, -7, -9), (22, 7, 8), (9, 0, -2), (24, 0, 3), (-4, 0, 0), (-12, 0, 0)),
+        ((62, 0, 0), (45, 0, 0), (24, 8, 10), (17, -8, -8), (22, 0, 3), (8, 0, -2), (-11, 0, 0), (-4, 0, 0)),
+    ),
+    "proud": (
+        ((22, 0, 0), (24, 0, 0), (7, -4, -10), (7, 4, 10), (5, 0, -1), (9, 0, 1), (-2, 0, 0), (-4, 0, 0)),
+        ((24, 0, 0), (22, 0, 0), (8, -3, -8), (8, 3, 8), (9, 0, 1), (5, 0, -1), (-4, 0, 0), (-2, 0, 0)),
+    ),
+    "elder": (
+        ((24, 0, 0), (30, 0, 0), (8, -3, -3), (9, 3, 4), (15, 0, -1), (20, 0, 2), (-7, 0, 0), (-10, 0, 0)),
+        ((30, 0, 0), (24, 0, 0), (9, 3, 4), (8, -3, -3), (20, 0, 2), (15, 0, -1), (-10, 0, 0), (-7, 0, 0)),
+    ),
+    "vigilant": (
+        ((32, 0, 0), (42, 0, 0), (10, -4, -8), (13, 4, 9), (11, 0, -2), (20, 0, 3), (-5, 0, 0), (-10, 0, 0)),
+        ((42, 0, 0), (30, 0, 0), (13, 4, 9), (9, -4, -7), (20, 0, 3), (10, 0, -2), (-10, 0, 0), (-5, 0, 0)),
+    ),
+    "monster": (
+        ((58, 0, 0), (70, 0, 0), (22, -9, -14), (27, 10, 16), (25, 0, -5), (16, 0, 4), (-13, 0, 0), (-8, 0, 0)),
+        ((72, 0, 0), (55, 0, 0), (28, 10, 17), (20, -9, -13), (15, 0, 4), (27, 0, -5), (-8, 0, 0), (-14, 0, 0)),
+    ),
+    "villain": (
+        ((34, 0, 0), (62, 0, 0), (9, -4, -7), (18, 8, 12), (9, 0, -2), (18, 0, 2), (-4, 0, 0), (-9, 0, 0)),
+        ((42, 0, 0), (48, 0, 0), (12, 5, 8), (14, -5, -7), (18, 0, 2), (8, 0, -2), (-9, 0, 0), (-4, 0, 0)),
+    ),
+    "idiot": (
+        ((70, 0, 0), (20, 0, 0), (28, -10, -20), (7, 7, 14), (8, 0, -4), (25, 0, 5), (-4, 0, 0), (-13, 0, 0)),
+        ((18, 0, 0), (65, 0, 0), (6, 8, 15), (25, -10, -18), (23, 0, 5), (7, 0, -4), (-12, 0, 0), (-4, 0, 0)),
+    ),
+    "barbarian": (
+        ((44, 0, 0), (50, 0, 0), (15, -7, -13), (17, 7, 14), (24, 0, -4), (28, 0, 4), (-12, 0, 0), (-14, 0, 0)),
+        ((52, 0, 0), (42, 0, 0), (18, 7, 15), (14, -7, -12), (28, 0, 4), (22, 0, -4), (-14, 0, 0), (-11, 0, 0)),
+    ),
+}
+
+
+def articulation(style, duration, timings=(.32, .68), articulations=ARTICULATIONS):
+    accents = articulations[style]
+    return {joint: [(0,), (round(duration * timings[0]), accents[0][index]),
+                    (round(duration * timings[1]), accents[1][index]), (duration,)]
+            for index, joint in enumerate(JOINTS)}
 
 SHOWCASES = {
     "calm": "village_artisan", "hardworking": "village_blacksmith",
@@ -236,8 +290,9 @@ def add_animations(root, styles, generic_name=False):
             "head": rig,
             "left_arm": find(root, "left_arm"), "right_arm": find(root, "right_arm"),
             "left_leg": find(root, "left_leg"), "right_leg": find(root, "right_leg"),
+            **{joint: find(root, joint) for joint in JOINTS},
         }
-        for target, poses in profile.items():
+        for target, poses in (profile | articulation(style, profile["duration"])).items():
             if target in targets:
                 targets[target][field] = track(targets[target], poses)
             elif target == "torso":

@@ -7,7 +7,8 @@ from generate_villager_accessories import walk
 from generate_villager_body import group
 from generate_villager_clothing import find
 from generate_villager_waiting_animations import (
-    EXAMPLE_DIR, clear_animations, eye_track, frame, reparent_character, reparent_head, reparent_upper_body, track, write,
+    EXAMPLE_DIR, JOINTS, articulation as joint_tracks, clear_animations, eye_track, frame,
+    reparent_character, reparent_head, reparent_upper_body, track, write,
 )
 from preview_bdengine import load
 
@@ -119,6 +120,49 @@ PERSONALITIES = {
     },
 }
 
+ARTICULATIONS = {
+    "calm": (
+        ((16, 0, 0), (10, 0, 0), (7, -3, -5), (4, 2, 3), (5, 0, -1), (7, 0, 1), (-2, 0, 0), (-3, 0, 0)),
+        ((10, 0, 0), (18, 0, 0), (4, 2, 3), (8, -3, -5), (7, 0, 1), (5, 0, -1), (-3, 0, 0), (-2, 0, 0)),
+    ),
+    "lively": (
+        ((52, 0, 0), (18, 0, 0), (20, -8, -16), (8, 5, 10), (20, 0, -3), (7, 0, 2), (-10, 0, 0), (-4, 0, 0)),
+        ((20, 0, 0), (58, 0, 0), (8, 5, 10), (22, -8, -17), (7, 0, 2), (21, 0, -3), (-4, 0, 0), (-10, 0, 0)),
+    ),
+    "shy": (
+        ((62, 0, 0), (68, 0, 0), (22, 8, 11), (24, -8, -11), (15, 0, -2), (20, 0, 2), (-7, 0, 0), (-10, 0, 0)),
+        ((70, 0, 0), (60, 0, 0), (26, -7, -10), (20, 7, 10), (20, 0, 2), (14, 0, -2), (-10, 0, 0), (-7, 0, 0)),
+    ),
+    "authoritative": (
+        ((24, 0, 0), (72, 0, 0), (8, -4, -7), (24, 7, 13), (8, 0, -2), (20, 0, 2), (-4, 0, 0), (-10, 0, 0)),
+        ((28, 0, 0), (42, 0, 0), (10, 4, 7), (14, -5, -8), (18, 0, 2), (8, 0, -2), (-9, 0, 0), (-4, 0, 0)),
+    ),
+    "storyteller": (
+        ((58, 0, 0), (22, 0, 0), (22, -9, -18), (8, 5, 10), (18, 0, -3), (7, 0, 2), (-9, 0, 0), (-4, 0, 0)),
+        ((20, 0, 0), (62, 0, 0), (8, 5, 10), (24, -9, -18), (7, 0, 2), (20, 0, -3), (-4, 0, 0), (-10, 0, 0)),
+    ),
+    "excited": (
+        ((58, 0, 0), (62, 0, 0), (24, -10, -19), (25, 10, 19), (22, 0, -4), (25, 0, 4), (-11, 0, 0), (-13, 0, 0)),
+        ((72, 0, 0), (55, 0, 0), (29, 10, 20), (22, -10, -17), (6, 0, 2), (8, 0, -2), (-3, 0, 0), (-4, 0, 0)),
+    ),
+    "monster": (
+        ((64, 0, 0), (76, 0, 0), (26, -11, -18), (30, 11, 20), (25, 0, -5), (18, 0, 4), (-13, 0, 0), (-9, 0, 0)),
+        ((78, 0, 0), (60, 0, 0), (31, 11, 21), (23, -10, -17), (16, 0, 4), (28, 0, -5), (-8, 0, 0), (-14, 0, 0)),
+    ),
+    "villain": (
+        ((30, 0, 0), (70, 0, 0), (10, -5, -8), (23, 9, 15), (9, 0, -2), (20, 0, 2), (-4, 0, 0), (-10, 0, 0)),
+        ((42, 0, 0), (54, 0, 0), (14, 6, 10), (17, -6, -10), (19, 0, 2), (8, 0, -2), (-10, 0, 0), (-4, 0, 0)),
+    ),
+    "idiot": (
+        ((75, 0, 0), (18, 0, 0), (30, -12, -22), (7, 8, 15), (8, 0, -5), (26, 0, 6), (-4, 0, 0), (-14, 0, 0)),
+        ((20, 0, 0), (72, 0, 0), (7, 8, 16), (29, -12, -21), (25, 0, 6), (7, 0, -5), (-13, 0, 0), (-4, 0, 0)),
+    ),
+    "barbarian": (
+        ((60, 0, 0), (66, 0, 0), (24, -10, -18), (26, 10, 19), (25, 0, -5), (30, 0, 5), (-13, 0, 0), (-15, 0, 0)),
+        ((72, 0, 0), (58, 0, 0), (29, 10, 20), (23, -9, -17), (30, 0, 5), (22, 0, -5), (-15, 0, 0), (-11, 0, 0)),
+    ),
+}
+
 SHOWCASES = {
     "calm": "young_cleric", "lively": "village_artisan",
     "shy": "forest_huntress", "authoritative": "town_guard",
@@ -185,8 +229,10 @@ def add_animations(root, styles, generic_name=False):
         targets = {
             "head": find(root, "Head Rig"),
             "left_arm": find(root, "left_arm"), "right_arm": find(root, "right_arm"),
+            **{joint: find(root, joint) for joint in JOINTS},
         }
-        for target, poses in profile.items():
+        joints = joint_tracks(style, profile["duration"], (.28, .62), ARTICULATIONS)
+        for target, poses in (profile | joints).items():
             if target in targets:
                 targets[target][field] = track(targets[target], poses)
             elif target == "torso":
