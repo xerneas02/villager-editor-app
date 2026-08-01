@@ -555,6 +555,13 @@ def self_test():
                for jump in jumps)
     assert max(abs(pose[1][0]) for pose in jumps[2]["left_leg"] if len(pose) > 1) > \
            max(abs(pose[1][0]) for pose in jumps[1]["left_leg"] if len(pose) > 1)
+    articulated = [profile for category, _, profile in specifications()
+                   if category in ("gestures", "reactions")]
+    articulation_joints = ("left_elbow", "right_elbow", "left_wrist", "right_wrist",
+                           "left_knee", "right_knee", "left_ankle", "right_ankle")
+    assert all(all(joint in profile for joint in articulation_joints) for profile in articulated)
+    assert all(pose[1][0] <= 0 for profile in articulated
+               for joint in ("left_elbow", "right_elbow") for pose in profile[joint] if len(pose) > 1)
     walking_animation = next(item for item in root["listAnim"] if item["name"] == "walking")
     walking_field = animation_field(walking_animation["id"])
     assert min(key["rotation"]["x"] for key in next(
