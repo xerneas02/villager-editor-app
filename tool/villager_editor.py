@@ -16,7 +16,7 @@ from generate_villager_action_animations import add_animations as add_actions, a
 from generate_villager_accessories import CATEGORIES as ACCESSORIES, combine_with_outfit, make_accessory, walk
 from generate_villager_body import BODY_TYPES, group
 from generate_villager_clothing import PRESETS as OUTFIT_PRESETS, build as build_outfit
-from generate_villager_emotion_animations import EMOTIONS, add_animations as add_emotions
+from generate_villager_emotion_animations import EMOTIONS, POSTURES, add_animations as add_emotions
 from generate_villager_examples import build, write
 from generate_villager_population import APPEARANCE_OVERRIDES, COMMON, EYEBROWS, POPULATION, PUPILS, eyebrows, pupils
 from generate_villager_talking_animations import PERSONALITIES as TALKING, add_animations as add_talking
@@ -612,6 +612,22 @@ def self_test():
     assert transitions["sadness"]["left_wrist"][-1][1][0] < 0
     assert transitions["fear"]["body"][1][1][0] < 0
     assert transitions["surprise"]["left_wrist"][2][0] > transitions["surprise"]["left_arm"][2][0]
+    assert set(POSTURES) == set(EMOTIONS)
+    assert POSTURES["fear"]["left_elbow"][1][1][0] > POSTURES["anger"]["left_elbow"][1][1][0]
+    assert abs(EMOTIONS["joy"]["left_arm"][1][1][2]) > abs(EMOTIONS["sadness"]["left_arm"][1][1][2])
+    emotion_root = copy.deepcopy(root)
+    add_emotions(emotion_root, tuple(EMOTIONS))
+    emotion_animations = [animation for animation in emotion_root["listAnim"]
+                          if animation["name"].startswith("emotion_")]
+    emotion_joints = [next(node for node in walk(emotion_root) if node.get("name") == name)
+                      for name in ("left_leg", "right_leg", "left_knee", "right_knee", "left_ankle", "right_ankle",
+                                   "left_elbow", "right_elbow", "left_wrist", "right_wrist")]
+    assert len(emotion_animations) == len(EMOTIONS)
+    assert all(animation_field(animation["id"]) in joint
+               for animation in emotion_animations for joint in emotion_joints)
+    assert len({tuple(round(joint[animation_field(animation["id"])][1]["rotation"][axis], 4)
+                      for joint in emotion_joints for axis in ("x", "z"))
+                for animation in emotion_animations}) == len(EMOTIONS)
     walking_animation = next(item for item in root["listAnim"] if item["name"] == "walking")
     walking_field = animation_field(walking_animation["id"])
     assert min(key["rotation"]["x"] for key in next(
