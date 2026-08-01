@@ -203,7 +203,7 @@ def add_animations(root, styles, generic_name=False):
         for eye in (find(root, "left_eye"), find(root, "right_eye")):
             eye[field] = eye_track(eye, profile["duration"], profile["blinks"], profile["gaze"])
         root.setdefault("listAnim", []).append({
-            "id": identifier, "name": "talking" if generic_name else f"talking_{style}",
+            "id": identifier, "name": "talking" if generic_name and offset == 0 else f"talking_{style}",
         })
     root["talkingAnimations"] = list(styles)
     return root

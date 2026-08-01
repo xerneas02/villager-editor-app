@@ -61,6 +61,19 @@ function selected(kind) {
   return [...document.querySelectorAll(`input[data-kind="${kind}"]:checked`)].map(input => input.value);
 }
 
+function animationValues(kind) {
+  const primary = $("#" + kind).value;
+  return [primary, ...selected(kind + "Animation").filter(value => value !== primary)];
+}
+
+function syncAnimationDefault(kind) {
+  const primary = $("#" + kind).value;
+  document.querySelectorAll(`input[data-kind="${kind}Animation"]`).forEach(input => {
+    input.disabled = input.value === primary;
+    if (input.disabled) input.checked = true;
+  });
+}
+
 function config() {
   const result = Object.fromEntries(fields.map(id => [id, $("#" + id).value]));
   result.scale = Number(result.scale);
@@ -71,6 +84,8 @@ function config() {
   result.role = state.role;
   result.emotions = selected("emotion");
   result.actions = selected("action");
+  for (const kind of ["waiting", "talking", "walking"])
+    result[kind + "Animations"] = animationValues(kind);
   return result;
 }
 
@@ -79,9 +94,13 @@ function applyConfig(preset) {
   state.role = preset.role;
   fields.forEach(id => { if (preset[id] !== undefined) $("#" + id).value = preset[id]; });
   $("#scaleHead").checked = preset.scaleHead ?? true;
-  document.querySelectorAll('input[data-kind]').forEach(input => {
-    input.checked = input.dataset.kind === "emotion" ? preset.emotions.includes(input.value) : preset.actions.includes(input.value);
-  });
+  document.querySelectorAll('input[data-kind="emotion"]').forEach(input => { input.checked = preset.emotions.includes(input.value); });
+  document.querySelectorAll('input[data-kind="action"]').forEach(input => { input.checked = preset.actions.includes(input.value); });
+  for (const kind of ["waiting", "talking", "walking"]) {
+    const values = preset[kind + "Animations"] || [preset[kind]];
+    document.querySelectorAll(`input[data-kind="${kind}Animation"]`).forEach(input => { input.checked = values.includes(input.value); });
+    syncAnimationDefault(kind);
+  }
   updateScaleLabel();
   updateHeadScale();
   updateWalkSpeed();
@@ -109,7 +128,8 @@ function applyPreset(key) {
 }
 
 function updateSummary() {
-  const total = 3 + selected("emotion").length + selected("action").length;
+  const total = ["waiting", "talking", "walking"].reduce((sum, kind) => sum + animationValues(kind).length, 0)
+    + selected("emotion").length + selected("action").length;
   $("#animationCount").textContent = `${total} sélectionnées`;
   $("#summaryAnimations").textContent = total;
   $("#summaryName").textContent = $("#name").value || "Sans nom";
@@ -268,6 +288,10 @@ function randomize() {
   const specialAnimations = ["monster", "villain", "idiot", "barbarian"];
   for (const kind of ["waiting", "talking", "walking"])
     $("#" + kind).value = pick(state.catalog.animations[kind].filter(value => specialAnimations.includes(value) === monster));
+  for (const kind of ["waiting", "talking", "walking"]) {
+    document.querySelectorAll(`input[data-kind="${kind}Animation"]`).forEach(input => { input.checked = input.value === $("#" + kind).value; });
+    syncAnimationDefault(kind);
+  }
   const ranges = {
     goblin: [1.35, 1.65], orc: [2.1, 2.45], brute: [2.35, 2.75],
     chubby: [1.95, 2.25], sturdy: [1.8, 2.1], heroic: [1.8, 2.1],
@@ -294,7 +318,10 @@ async function start() {
   const response = await fetch("/api/catalog");
   state.catalog = await response.json();
   Object.entries(state.catalog.components).forEach(([id, values]) => fillSelect(id, values, ["facialHair", "hat", "horns", "tail", "wings", "accessory"].includes(id)));
-  ["waiting", "talking", "walking"].forEach(id => fillSelect(id, state.catalog.animations[id]));
+  ["waiting", "talking", "walking"].forEach(id => {
+    fillSelect(id, state.catalog.animations[id]);
+    checks($("#" + id + "Animations"), state.catalog.animations[id], id + "Animation");
+  });
   fillSelect("preset", Object.keys(state.catalog.presets));
   checks($("#emotions"), state.catalog.animations.emotions, "emotion");
   const groups = $("#actions");
@@ -317,8 +344,14 @@ async function start() {
   $("#walkSpeed").addEventListener("input", updateWalkSpeed);
   $("#scaleMode").addEventListener("change", () => schedulePreview(0));
   $("#scaleHead").addEventListener("change", () => { updateHeadScale(); schedulePreview(0); });
-  document.querySelectorAll("#waiting, #talking, #walking, input[data-kind]")
+  for (const kind of ["waiting", "talking", "walking"])
+    $("#" + kind).addEventListener("change", () => { syncAnimationDefault(kind); updateSummary(); });
+  document.querySelectorAll("input[data-kind]")
     .forEach(input => input.addEventListener("change", updateSummary));
+  $("#allBaseAnimations").addEventListener("click", () => {
+    document.querySelectorAll('input[data-kind$="Animation"]').forEach(input => { input.checked = true; });
+    updateSummary();
+  });
   $("#name").addEventListener("input", updateSummary);
   $("#refresh").addEventListener("click", preview);
   $("#import").addEventListener("click", () => $("#importFile").click());

@@ -121,15 +121,15 @@ def add_animations(root, styles, generic_name=False, movement_speed=None, leg_le
             "right_knee": (-18, -knee, -4, -8, -18),
             "left_ankle": (ankle, 0, -ankle * .8, ankle * .5, ankle),
             "right_ankle": (-ankle * .8, ankle * .5, ankle, 0, -ankle * .8),
-            "left_elbow": (elbow * .65, elbow * .8, elbow, elbow * .8, elbow * .65),
-            "right_elbow": (elbow, elbow * .8, elbow * .65, elbow * .8, elbow),
-            "left_wrist": (-wrist, 0, wrist, 0, -wrist),
-            "right_wrist": (wrist, 0, -wrist, 0, wrist),
+            "left_elbow": (-elbow * .65, -elbow * .8, -elbow, -elbow * .8, -elbow * .65),
+            "right_elbow": (-elbow, -elbow * .8, -elbow * .65, -elbow * .8, -elbow),
+            "left_wrist": (wrist, 0, -wrist, 0, wrist),
+            "right_wrist": (-wrist, 0, wrist, 0, -wrist),
         }
         for joint, rotations in joint_cycles.items():
             node = find(root, joint)
             node[field] = cycle_frames(node, duration, tuple((rotation, 0, 0) for rotation in rotations))
-        name = "walking" if generic_name else f"walking_{style}"
+        name = "walking" if generic_name and offset == 0 else f"walking_{style}"
         root.setdefault("listAnim", []).append({"id": identifier, "name": name})
         speed = movement_speed or profile["speed"] * leg_length / REFERENCE_LEG_LENGTH
         controller[name] = {

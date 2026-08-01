@@ -246,7 +246,7 @@ def add_animations(root, styles, generic_name=False):
                 torso[field] = track(torso, [(pose[0], (0, 0, 0), pose[2] if len(pose) > 2 else (1, 1, 1)) for pose in poses])
         for eye in (find(root, "left_eye"), find(root, "right_eye")):
             eye[field] = eye_track(eye, profile["duration"], profile["blinks"], profile["gaze"])
-        root["listAnim"].append({"id": identifier, "name": "waiting" if generic_name else f"waiting_{style}"})
+        root["listAnim"].append({"id": identifier, "name": "waiting" if generic_name and identifier == 1 else f"waiting_{style}"})
     root["waitingAnimations"] = list(styles)
     return root
 

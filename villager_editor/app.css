@@ -66,6 +66,10 @@ input[type="file"] { width: 100%; padding: 9px; border: 1px solid var(--line); b
 .action-group { margin-top: 9px; padding: 10px; border: 1px solid var(--line); border-radius: 5px; background: #171914; }
 .action-group summary { color: var(--text); cursor: pointer; font-size: 12px; font-weight: 800; text-transform: capitalize; }
 .action-group .checks { margin-top: 10px; }
+.animation-selection { display: grid; gap: 10px; }
+.animation-set { display: grid; gap: 9px; padding: 11px; border: 1px solid var(--line); border-radius: 5px; background: #171914; }
+.animation-set .check:has(input:disabled) { opacity: .55; cursor: default; }
+.animation-all { width: 100%; margin-top: 10px; }
 
 .stage { min-width: 0; padding: 22px 28px 28px; display: grid; grid-template-rows: auto minmax(420px, 1fr) auto auto; gap: 13px; }
 .stage-header { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; }

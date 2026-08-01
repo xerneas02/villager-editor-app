@@ -161,6 +161,13 @@ def choice(config, key, options, optional=False):
     return value
 
 
+def animation_choices(config, key, default):
+    values = config.get(f"{key}Animations", [default])
+    if not isinstance(values, list) or any(value not in CATALOG["animations"][key] for value in values):
+        raise ValueError(f"Liste d’animations invalide pour {key}")
+    return [default, *(value for value in dict.fromkeys(values) if value != default)]
+
+
 def validate(config):
     if not isinstance(config, dict):
         raise ValueError("Configuration invalide")
@@ -186,6 +193,8 @@ def validate(config):
         "talking": choice(config, "talking", CATALOG["animations"]["talking"]),
         "walking": choice(config, "walking", CATALOG["animations"]["walking"]),
     }
+    for key in ("waiting", "talking", "walking"):
+        result[f"{key}Animations"] = animation_choices(config, key, result[key])
     try:
         scale = float(config.get("scale", DEFAULT_HEIGHT))
     except (TypeError, ValueError) as error:
@@ -280,12 +289,12 @@ def compose(config, animated=True):
     eyebrows(root, config["eyebrows"])
     pupils(root, config["pupilStyle"])
     if animated:
-        add_waiting(root, (config["waiting"],), generic_name=True)
-        add_talking(root, (config["talking"],), generic_name=True)
+        add_waiting(root, tuple(config["waitingAnimations"]), generic_name=True)
+        add_talking(root, tuple(config["talkingAnimations"]), generic_name=True)
         leg = next(node for node in walk(root) if node.get("name") == "left_leg")
         leg_length = (leg["defaultTransform"]["position"][1] - dimensions[0]) * body_scale(
             config["scale"], config["scaleHead"], config["headScale"], dimensions)
-        add_walking(root, (config["walking"],), generic_name=True,
+        add_walking(root, tuple(config["walkingAnimations"]), generic_name=True,
                     movement_speed=config["walkSpeed"], leg_length=leg_length)
         add_emotions(root, tuple(config["emotions"]))
         add_actions(root, [ACTION_SPECS[name] for name in config["actions"]])
@@ -536,8 +545,8 @@ def self_test():
     assert max(pose[2][1] for pose in running["body_motion"]) >= .13
     walking_animation = next(item for item in root["listAnim"] if item["name"] == "walking")
     walking_field = animation_field(walking_animation["id"])
-    assert min(key["rotation"]["x"] for key in next(
-        node for node in walk(root) if node.get("name") == "left_elbow")[walking_field]) > 0
+    assert max(key["rotation"]["x"] for key in next(
+        node for node in walk(root) if node.get("name") == "left_elbow")[walking_field]) < 0
     assert all(max(pose[1][0] for pose in ACTION_SPECS[action][2]["left_elbow"]) < 0
                for action in ("locomotion_running", "locomotion_sneaking",
                               "locomotion_limping", "locomotion_carrying_walk"))
@@ -612,6 +621,15 @@ def self_test():
     assert any(node is wing_group for node in walk(upper_rig))
     assert root["editorAnimationCount"] == len(root["listAnim"]) == 21
     assert [animation["name"] for animation in root["listAnim"][:3]] == ["waiting", "talking", "walking"]
+    all_base = validate({**sample, "waitingAnimations": list(WAITING),
+                         "talkingAnimations": list(TALKING), "walkingAnimations": list(WALKING)})
+    all_root = compose(all_base)
+    all_names = [animation["name"] for animation in all_root["listAnim"]]
+    assert all(all_names.count(name) == 1 for name in ("waiting", "talking", "walking"))
+    assert {f"waiting_{style}" for style in WAITING if style != sample["waiting"]} <= set(all_names)
+    assert {f"talking_{style}" for style in TALKING if style != sample["talking"]} <= set(all_names)
+    assert {f"walking_{style}" for style in WALKING if style != sample["walking"]} <= set(all_names)
+    assert all_root["editorAnimationCount"] == len(WAITING) + len(TALKING) + len(WALKING) + len(sample["emotions"]) + len(sample["actions"])
     special_animations = {"monster", "villain", "idiot", "barbarian"}
     assert special_animations <= set(WAITING) & set(TALKING) & set(WALKING)
     assert (CATALOG["presets"]["goblin_raider"]["waiting"], CATALOG["presets"]["goblin_raider"]["talking"],
