@@ -1,5 +1,5 @@
 const $ = (selector) => document.querySelector(selector);
-const state = { catalog: null, gender: "female", role: "farmer", previewTimer: null, request: 0 };
+const state = { catalog: null, gender: "female", role: "farmer", previewTimer: null, request: 0, generatedNames: new Set() };
 const fields = ["name", "nose", "ears", "eyebrows", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "wings", "bodyType", "outfit", "accessory", "scale", "scaleMode", "headScale", "waiting", "talking", "walking", "walkSpeed"];
 const pupilLabels = { default: "Carrées", small: "Petites", round: "Rondes voxel", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", large: "Grandes" };
 
@@ -11,6 +11,32 @@ function label(value) {
   const names = { thick: "Épais", thin: "Fins", arched: "Arqués", stern: "Sévères", worried: "Inquiets", bushy: "Broussailleux", unibrow: "Monosourcil", draconic: "Draconiques", moose: "Élan", reindeer: "Renne", roe_deer: "Chevreuil", unicorn: "Licorne", ogre: "Ogre", great_helm: "Grand heaume", knight_plate: "Chevalier en plates", knight_noble: "Chevalier noble", knight_black: "Chevalier noir", vertical_slit: "Fente verticale", horizontal_slit: "Fente horizontale", wolf: "Loup", fox: "Renard", cat: "Chat", deer: "Cerf", rabbit: "Lapin", horse: "Cheval", goat: "Chèvre", dragon: "Dragon", bird: "Oiseau", angel: "Ange — quatre ailes", demonic: "Démoniaque", butterfly: "Papillon", insect: "Insecte", lizard: "Lézard", crocodile: "Crocodile", iguana: "Iguane", serpent: "Serpent", none: "Aucun" };
   if (names[value]) return names[value];
   return value.replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function generateName({ monster, body, child, ears, outfit }) {
+  const pick = values => values[Math.floor(Math.random() * values.length)];
+  const elven = ears.includes("elf");
+  const first = monster
+    ? pick(body === "goblin" ? ["Grik", "Krik", "Mogg", "Nib", "Ruk", "Snazz", "Vexa", "Zib"] : ["Brakka", "Drog", "Gorak", "Korga", "Mazga", "Thorg", "Urza", "Varka"])
+    : elven
+      ? pick(state.gender === "female" ? ["Aelwen", "Elara", "Lethiel", "Maela", "Naevys", "Sylwen"] : ["Aelar", "Faelar", "Lethan", "Orym", "Theren", "Vaelis"])
+      : child
+        ? pick(["Colin", "Éloi", "Lise", "Milo", "Nina", "Robin"])
+        : pick(state.gender === "female" ? ["Adèle", "Clara", "Élise", "Hélène", "Mira", "Ysabeau"] : ["Aldric", "Cédric", "Garin", "Hugo", "Martin", "Tomas"]);
+  const endings = monster
+    ? outfit.includes("shaman") ? ["Brume-Os", "Crocsage", "Œil-Cendre"] : outfit.includes("warrior") ? ["Brise-Fer", "Poing-Rouge", "Taille-Crâne"] : ["Griffe-Sale", "Mange-Rat", "Pique-Fange"]
+    : outfit.includes("knight") || outfit.includes("guard") ? ["du Rempart", "Gardefer", "Hautecu"]
+      : outfit.includes("blacksmith") ? ["Forgefer", "Martelet", "du Foyer"]
+        : outfit.includes("farmer") || outfit.includes("peasant") || outfit.includes("rustic") ? ["Brindepaille", "des Prés", "Sillon"]
+          : outfit.includes("hunter") || outfit.includes("traveler") ? ["Longchemin", "Sylve", "Va-au-Bois"]
+            : outfit.includes("clergy") ? ["de l’Aube", "Doucefoi", "Lumière"]
+              : outfit.includes("noble") ? ["de Valdor", "de Hauterive", "de Montclair"]
+                : ["Boisclair", "Rivière", "Valet"];
+  const base = `${first} ${pick(endings)}`;
+  let name = base;
+  for (let number = 2; state.generatedNames.has(name); number++) name = `${base} ${number}`;
+  state.generatedNames.add(name);
+  return name;
 }
 
 function fillSelect(id, values, optional = false) {
@@ -230,6 +256,7 @@ function randomize() {
     : c.wings.filter(value => ["bird", "angel", "butterfly"].includes(value))) : "";
   $("#wings").value = wings;
   $("#ears").value = ({ wolf: "wolf", fox: "fox", cat: "cat", rabbit: "rabbit", deer: "deer", goat: "goat", horse: "horse" })[tail] || pick(ears);
+  $("#name").value = generateName({ monster, body: base, child, ears: $("#ears").value, outfit: $("#outfit").value });
   const accessories = wings ? c.accessory.filter(value => !["quiver", "traveler_cloak"].includes(value)) : c.accessory;
   $("#accessory").value = Math.random() < (monster ? .35 : .6) ? pick(accessories) : "";
   $("#hairColor").value = pick(["#3e3028", "#6c3f28", "#8b5c3e", "#a4825d", "#c49a58", "#e0c58d"]);
@@ -259,6 +286,7 @@ function randomize() {
   updateScaleLabel();
   updateHeadScale();
   updateWalkSpeed();
+  updateSummary();
   schedulePreview(0);
 }
 
