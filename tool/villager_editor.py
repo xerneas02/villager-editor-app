@@ -305,8 +305,8 @@ def compose(config, animated=True):
         animate_wings(root)
     apply_scale(root, config["scale"], config["scaleMode"], config["scaleHead"], config["headScale"], dimensions)
     root["name"] = config["name"]
-    root["mainNBT"] = config["name"]
-    root["nbt"] = str(config["walkSpeed"])
+    root["mainNBT"] = f'Tags:[{json.dumps(config["name"], ensure_ascii=False)}]'
+    root["nbt"] = f'villager_speed:{config["walkSpeed"]}d'
     root["editorConfig"] = config
     root["editorAnimationCount"] = len(root.get("listAnim", []))
     return root
@@ -520,7 +520,8 @@ def self_test():
     sample = validate(CATALOG["presets"]["mira_farmer"])
     root = compose(sample)
     assert root["faceStyle"] == "feminine_thin_eyebrows"
-    assert (root["mainNBT"], root["nbt"]) == (sample["name"], str(sample["walkSpeed"]))
+    assert (root["mainNBT"], root["nbt"]) == (
+        f'Tags:[{json.dumps(sample["name"], ensure_ascii=False)}]', f'villager_speed:{sample["walkSpeed"]}d')
     for chain in (("left_arm", "left_elbow", "left_wrist"), ("right_arm", "right_elbow", "right_wrist"),
                   ("left_leg", "left_knee", "left_ankle"), ("right_leg", "right_knee", "right_ankle")):
         parent = next(node for node in walk(root) if node.get("name") == chain[0])
