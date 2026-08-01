@@ -293,6 +293,8 @@ def compose(config, animated=True):
         animate_wings(root)
     apply_scale(root, config["scale"], config["scaleMode"], config["scaleHead"], config["headScale"], dimensions)
     root["name"] = config["name"]
+    root["mainNBT"] = config["name"]
+    root["nbt"] = str(config["walkSpeed"])
     root["editorConfig"] = config
     root["editorAnimationCount"] = len(root.get("listAnim", []))
     return root
@@ -506,6 +508,7 @@ def self_test():
     sample = validate(CATALOG["presets"]["mira_farmer"])
     root = compose(sample)
     assert root["faceStyle"] == "feminine_thin_eyebrows"
+    assert (root["mainNBT"], root["nbt"]) == (sample["name"], str(sample["walkSpeed"]))
     walk_control = root["walkingController"]["animations"]["walking"]
     assert walk_control["movementSpeed"] == sample["walkSpeed"]
     assert walk_control["cycleDurationTicks"] < WALKING[sample["walking"]]["duration"]

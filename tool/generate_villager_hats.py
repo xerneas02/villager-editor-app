@@ -105,16 +105,18 @@ HATS = {
         p("helm_top", (0, 2.49, -.22), (.76, .08, .56), 1),
         p("helm_left_side", (-.43, 2.05, -.22), (.10, .33, .62), 1),
         p("helm_right_side", (.43, 2.05, -.22), (.10, .33, .62), 1),
-        p("brow_plate", (0, 2.10, -.68), (.78, .22, .10), 2),
-        p("left_faceplate", (-.23, 1.77, -.60), (.31, .22, .075), 0),
-        p("right_faceplate", (.23, 1.77, -.60), (.31, .22, .075), 0),
-        p("nose_guard", (0, 1.88, -.625), (.085, .30, .07), 1),
-        p("lower_faceplate", (0, 1.69, -.59), (.78, .10, .075), 1),
-        p("left_breath_slot", (-.18, 1.76, -.635), (.17, .035, .03), 2),
-        p("right_breath_slot", (.18, 1.76, -.635), (.17, .035, .03), 2),
-        p("back_plate", (0, 1.91, .13), (.79, .31, .08), 1),
-        p("neck_guard", (0, 1.67, -.06), (.82, .10, .47), 2),
+        p("brow_plate", (0, 2.10, -.570625), (.78, .22, .10), 2),
+        p("left_faceplate", (-.23, 1.77, -.563125), (.31, .22, .075), 0),
+        p("right_faceplate", (.23, 1.77, -.563125), (.31, .22, .075), 0),
+        p("nose_guard", (0, 1.88, -.578125), (.1635, .30, .07), 1),
+        p("lower_faceplate", (0, 1.69, -.553125), (.78, .10, .075), 1),
+        p("left_breath_slot", (-.18, 1.76, -.598125), (.17, .035, .03), 2),
+        p("right_breath_slot", (.18, 1.76, -.598125), (.17, .035, .03), 2),
+        p("back_plate", (0, 2.038125, .13), (.79, .31, .08), 1),
+        p("neck_guard", (0, 1.835, -.06), (.82, .10, .47), 2),
         p("top_ridge", (0, 2.57, -.22), (.075, .18, .47), 1),
+        p("left_cheek_guard", (-.355625, 1.88, -.509375), (.1635, .30, .07), 2, (0, 90, 0)),
+        p("right_cheek_guard", (.355625, 1.88, -.509375), (.1635, .30, .07), 2, (0, 90, 0)),
     ]),
     "kettle_helmet": ("#8B9190", [
         p("helmet_brim", (0, 2.32, -.22), (1.08, .08, .80), 1),
@@ -170,6 +172,7 @@ def write(scene, output):
     decoded = json.loads(gzip.decompress(base64.b64decode(output.read_text())))[0]
     assert decoded["hatStyle"] in HATS
     assert decoded["children"][-1]["name"] == f"Hat - {decoded['hatStyle']}"
+    assert decoded["hatStyle"] != "great_helm" or len(decoded["children"][-1]["children"]) == 17
 
 
 def compatibility_previews(styles):
