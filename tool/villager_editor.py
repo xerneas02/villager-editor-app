@@ -581,6 +581,18 @@ def self_test():
            max(pose[1][0] for pose in professions["hammer"]["right_wrist"] if len(pose) > 1)
     assert min(pose[1][0] for pose in professions["shoot_bow"]["right_elbow"] if len(pose) > 1) < -90
     assert min(pose[1][0] for pose in professions["shoot_bow"]["left_elbow"] if len(pose) > 1) > -10
+    villains = {name: ACTION_SPECS[f"villain_{name}"][2]
+                for name in ("threaten", "evil_laugh", "intimidate", "slash")}
+    assert all(all(joint in profile for joint in articulation_joints)
+               for profile in villains.values())
+    assert all(pose[1][0] <= 0 for profile in villains.values()
+               for joint in ("left_elbow", "right_elbow") for pose in profile[joint] if len(pose) > 1)
+    slash = villains["slash"]
+    assert slash["right_knee"][1][1][0] > slash["left_knee"][1][1][0]
+    assert slash["left_knee"][2][1][0] > slash["right_knee"][2][1][0]
+    assert min(pose[1][0] for pose in slash["right_wrist"] if len(pose) > 1) < 0 < \
+           max(pose[1][0] for pose in slash["right_wrist"] if len(pose) > 1)
+    assert villains["intimidate"]["left_leg"][1][1][2] < 0 < villains["intimidate"]["right_leg"][1][1][2]
     walking_animation = next(item for item in root["listAnim"] if item["name"] == "walking")
     walking_field = animation_field(walking_animation["id"])
     assert min(key["rotation"]["x"] for key in next(
