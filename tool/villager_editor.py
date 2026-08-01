@@ -740,6 +740,14 @@ def self_test():
     assert (CATALOG["presets"]["goblin_raider"]["waiting"], CATALOG["presets"]["goblin_raider"]["talking"],
             CATALOG["presets"]["goblin_raider"]["walking"]) == ("idiot", "monster", "monster")
     assert {"buzz_cut", "mohawk", "afro", "dreadlocks", "ponytail", "pigtails", "bun", "double_buns"} <= set(CATALOG["components"]["hair"])
+    hair_dir = ROOT / "bdengine" / "characters" / "villagers" / "hair"
+    short = next(node for node in load(hair_dir / "villager_hair_short_heroic.bdengine")["children"]
+                 if node.get("name") == "Hair - short_heroic")
+    mohawk = next(node for node in load(hair_dir / "villager_hair_mohawk.bdengine")["children"]
+                   if node.get("name") == "Hair - mohawk")
+    assert len(mohawk["children"]) == len(short["children"]) + 5
+    assert [piece["transforms"] for piece in mohawk["children"][:len(short["children"])]] == \
+           [piece["transforms"] for piece in short["children"]]
     assert {"stubble", "moustache_stubble"} <= set(CATALOG["components"]["facialHair"])
     assert all(any((ROOT / "bdengine" / "characters" / "villagers" / "headwear").rglob(f"villager_hat_{name}.bdengine"))
                for name in CATALOG["components"]["hat"])

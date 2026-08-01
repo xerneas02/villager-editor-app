@@ -217,14 +217,18 @@ def buzz_cut():
     ]
 
 
-def mohawk():
-    return buzz_cut() + [
+def mohawk_crest():
+    return [
         ("mohawk_front", (0, 2.15, -.43), (.15, .28, .17), (-10, 0, 0), 2),
         ("mohawk_front_mid", (0, 2.19, -.27), (.16, .34, .18), (-5, 0, 0), 0),
         ("mohawk_crown", (0, 2.20, -.09), (.17, .36, .19), (1, 0, 0), 2),
         ("mohawk_back_mid", (0, 2.16, .055), (.16, .31, .17), (7, 0, 0), 0),
         ("mohawk_back", (0, 2.08, .13), (.14, .22, .12), (14, 0, 0), 1),
     ]
+
+
+def mohawk():
+    return short_heroic() + mohawk_crest()
 
 
 def afro():
@@ -352,10 +356,11 @@ def color_eyebrows(root, texture_index):
 def build(style, color, use_template=True):
     # Hand-cleaned exports are authoritative: preserve their exact geometry and only
     # replace the three palette entries when generating another colour.
-    template = HAIR_DIR / f"villager_hair_{style}.bdengine"
-    if use_template and template.exists():
+    template_style = "short_heroic" if style == "mohawk" and not use_template else style
+    template = HAIR_DIR / f"villager_hair_{template_style}.bdengine"
+    if (use_template or style == "mohawk") and template.exists():
         root = copy.deepcopy(load(template))
-        hair = next(group for group in root["children"] if group.get("name") == f"Hair - {style}")
+        hair = next(group for group in root["children"] if group.get("name") == f"Hair - {template_style}")
         textures = root.setdefault("refs", {}).setdefault("paintTextures", [])
         used = sorted({piece.get("paintTexture") for piece in hair["children"]
                        if isinstance(piece.get("paintTexture"), int)
@@ -363,6 +368,11 @@ def build(style, color, use_template=True):
         assert len(used) == 3
         for index, factor in zip(used, (1, .82, 1.12)):
             textures[index] = texture(tint(color, factor))
+        if style == "mohawk" and not use_template:
+            hair["children"] += [hair_box(name, center, size, rotation, used[tone])
+                                 for name, center, size, rotation, tone in mohawk_crest()]
+            hair["name"] = "Hair - mohawk"
+            root["name"] = "Villager Head - mohawk"
         color_eyebrows(root, used[0])
         root["hairStyle"] = style
         root["hairColor"] = color
