@@ -593,6 +593,17 @@ def self_test():
     assert min(pose[1][0] for pose in slash["right_wrist"] if len(pose) > 1) < 0 < \
            max(pose[1][0] for pose in slash["right_wrist"] if len(pose) > 1)
     assert villains["intimidate"]["left_leg"][1][1][2] < 0 < villains["intimidate"]["right_leg"][1][1][2]
+    transitions = {name: ACTION_SPECS[f"transition_to_{name}"][2]
+                   for name in ("anger", "joy", "sadness", "fear", "surprise")}
+    assert all(all(joint in profile for joint in articulation_joints)
+               for profile in transitions.values())
+    assert all(pose[1][0] <= 0 for profile in transitions.values()
+               for joint in ("left_elbow", "right_elbow") for pose in profile[joint] if len(pose) > 1)
+    assert transitions["anger"]["right_knee"][-1][1][0] > transitions["anger"]["left_knee"][-1][1][0]
+    assert transitions["joy"]["left_knee"][1][1][0] > transitions["joy"]["left_knee"][-1][1][0]
+    assert transitions["sadness"]["left_wrist"][-1][1][0] < 0
+    assert transitions["fear"]["body"][1][1][0] < 0
+    assert transitions["surprise"]["left_wrist"][2][0] > transitions["surprise"]["left_arm"][2][0]
     walking_animation = next(item for item in root["listAnim"] if item["name"] == "walking")
     walking_field = animation_field(walking_animation["id"])
     assert min(key["rotation"]["x"] for key in next(
