@@ -646,6 +646,11 @@ def self_test():
             left_knee = next(node for node in walk(ground_root) if node.get("name") == "left_knee")[field]
             assert left_leg[0]["rotation"]["x"] > 0 > right_leg[0]["rotation"]["x"]
             assert left_knee[0]["rotation"]["x"] < 0
+        if action in {"daily_sit_enter", "daily_sit_exit", "daily_sleep_enter", "daily_sleep_exit"}:
+            character = next(node for node in walk(ground_root) if node.get("name") == "Character Rig")
+            upper = next(node for node in walk(ground_root) if node.get("name") == "Upper Body Rig")
+            assert len(character[field]) >= 5 and all(abs(frame["rotation"]["x"]) < 1e-9 for frame in character[field])
+            assert max(abs(frame["rotation"]["x"]) for frame in upper[field]) > .08
     assert validate({**sample, "actions": ["daily_sit", "daily_kneel", "daily_sleep"]})["actions"] == list(ground_actions)
     assert all(any(key == "animation" or key.startswith("animation_")
                    for key in next(node for node in walk(root) if node.get("name") == joint))
