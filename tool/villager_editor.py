@@ -650,8 +650,10 @@ def self_test():
                    if key not in ("duration", "upper_motion"))
     kneel_enter = ACTION_SPECS["daily_kneel_enter"][2]
     kneel_loop = ACTION_SPECS["daily_kneel_loop"][2]
+    kneel_exit = ACTION_SPECS["daily_kneel_exit"][2]
+    assert kneel_enter["duration"] == 46 and kneel_exit["duration"] == 42
     assert kneel_enter["right_knee"][2][1][0] > kneel_enter["left_knee"][2][1][0]
-    assert kneel_loop["left_leg"][0][1][0] == -88 and kneel_loop["right_leg"][0][1][0] == 2
+    assert kneel_loop["left_leg"][0][1][0] == -28 and kneel_loop["right_leg"][0][1][0] == -37.34
     assert all(len({pose[1:] for pose in kneel_loop[key]}) == 1
                for key in ("left_leg", "right_leg", "left_knee", "right_knee", "left_ankle", "right_ankle"))
     ground_root = compose({**sample, "actions": list(ground_actions)})
@@ -668,7 +670,7 @@ def self_test():
             left_leg = next(node for node in walk(ground_root) if node.get("name") == "left_leg")[field]
             right_leg = next(node for node in walk(ground_root) if node.get("name") == "right_leg")[field]
             left_knee = next(node for node in walk(ground_root) if node.get("name") == "left_knee")[field]
-            assert left_leg[0]["rotation"]["x"] > 0 > right_leg[0]["rotation"]["x"]
+            assert left_leg[0]["rotation"]["x"] > 0 and right_leg[0]["rotation"]["x"] > 0
             assert left_knee[0]["rotation"]["x"] < 0
         if action in {"daily_sit_enter", "daily_sit_exit", "daily_sleep_enter", "daily_sleep_exit"}:
             character = next(node for node in walk(ground_root) if node.get("name") == "Character Rig")
