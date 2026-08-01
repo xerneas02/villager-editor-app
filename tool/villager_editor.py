@@ -571,6 +571,16 @@ def self_test():
     assert all(max(pose[1][0] for pose in profile["right_knee"] if len(pose) > 1) >
                max(pose[1][0] for pose in profile["left_knee"] if len(pose) > 1)
                for profile in daily[2:])
+    professions = {name: ACTION_SPECS[f"profession_{name}"][2]
+                   for name in ("hoe", "sow", "harvest", "hammer", "pray", "shoot_bow", "guard")}
+    assert all(all(joint in profile for joint in articulation_joints)
+               for profile in professions.values())
+    assert all(pose[1][0] <= 0 for profile in professions.values()
+               for joint in ("left_elbow", "right_elbow") for pose in profile[joint] if len(pose) > 1)
+    assert min(pose[1][0] for pose in professions["hammer"]["right_wrist"] if len(pose) > 1) < 0 < \
+           max(pose[1][0] for pose in professions["hammer"]["right_wrist"] if len(pose) > 1)
+    assert min(pose[1][0] for pose in professions["shoot_bow"]["right_elbow"] if len(pose) > 1) < -90
+    assert min(pose[1][0] for pose in professions["shoot_bow"]["left_elbow"] if len(pose) > 1) > -10
     walking_animation = next(item for item in root["listAnim"] if item["name"] == "walking")
     walking_field = animation_field(walking_animation["id"])
     assert min(key["rotation"]["x"] for key in next(
