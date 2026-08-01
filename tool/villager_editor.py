@@ -530,7 +530,13 @@ def self_test():
     assert run_control["cycleDurationTicks"] < runner_walk["cycleDurationTicks"]
     running = ACTION_SPECS["locomotion_running"][2]
     assert len(running["left_leg"]) == 9 and max(abs(pose[1][0]) for pose in running["left_leg"]) >= 60
+    assert all(len(running[joint]) >= 5 for joint in ("left_knee", "right_knee", "left_ankle", "right_ankle",
+                                                     "left_elbow", "right_elbow", "left_wrist", "right_wrist"))
     assert max(pose[2][1] for pose in running["body_motion"]) >= .13
+    assert all(any(key == "animation" or key.startswith("animation_")
+                   for key in next(node for node in walk(root) if node.get("name") == joint))
+               for joint in ("left_knee", "right_knee", "left_ankle", "right_ankle",
+                             "left_elbow", "right_elbow", "left_wrist", "right_wrist"))
     legacy_face = dict(sample)
     legacy_face.pop("eyebrows")
     assert validate(legacy_face)["eyebrows"] == "thin"
