@@ -121,10 +121,10 @@ def add_animations(root, styles, generic_name=False, movement_speed=None, leg_le
             "right_knee": (-18, -knee, -4, -8, -18),
             "left_ankle": (ankle, 0, -ankle * .8, ankle * .5, ankle),
             "right_ankle": (-ankle * .8, ankle * .5, ankle, 0, -ankle * .8),
-            "left_elbow": (-elbow * .65, -elbow * .8, -elbow, -elbow * .8, -elbow * .65),
-            "right_elbow": (-elbow, -elbow * .8, -elbow * .65, -elbow * .8, -elbow),
-            "left_wrist": (wrist, 0, -wrist, 0, wrist),
-            "right_wrist": (-wrist, 0, wrist, 0, -wrist),
+            "left_elbow": (elbow * .65, elbow * .8, elbow, elbow * .8, elbow * .65),
+            "right_elbow": (elbow, elbow * .8, elbow * .65, elbow * .8, elbow),
+            "left_wrist": (-wrist, 0, wrist, 0, -wrist),
+            "right_wrist": (wrist, 0, -wrist, 0, wrist),
         }
         for joint, rotations in joint_cycles.items():
             node = find(root, joint)

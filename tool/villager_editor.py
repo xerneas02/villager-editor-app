@@ -532,8 +532,18 @@ def self_test():
     assert len(running["left_leg"]) == 9 and max(abs(pose[1][0]) for pose in running["left_leg"]) >= 60
     assert all(len(running[joint]) >= 5 for joint in ("left_knee", "right_knee", "left_ankle", "right_ankle",
                                                      "left_elbow", "right_elbow", "left_wrist", "right_wrist"))
+    assert all(pose[1][0] < 0 for pose in running["left_elbow"])
     assert max(pose[2][1] for pose in running["body_motion"]) >= .13
+    walking_animation = next(item for item in root["listAnim"] if item["name"] == "walking")
+    walking_field = animation_field(walking_animation["id"])
+    assert min(key["rotation"]["x"] for key in next(
+        node for node in walk(root) if node.get("name") == "left_elbow")[walking_field]) > 0
+    assert all(max(pose[1][0] for pose in ACTION_SPECS[action][2]["left_elbow"]) < 0
+               for action in ("locomotion_running", "locomotion_sneaking",
+                              "locomotion_limping", "locomotion_carrying_walk"))
     ground_actions = ("daily_sit", "daily_kneel", "daily_sleep")
+    assert all(ACTION_SPECS[action][2]["left_elbow"][1][1][0] < 0
+               for action in ("daily_sit", "daily_kneel", "daily_sleep"))
     ground_root = compose({**sample, "actions": list(ground_actions)})
     for action in ground_actions:
         animation = next(item for item in ground_root["listAnim"] if item["name"] == action)
@@ -541,6 +551,9 @@ def self_test():
         assert all(field in next(node for node in walk(ground_root) if node.get("name") == joint)
                    for joint in ("left_knee", "right_knee", "left_ankle", "right_ankle",
                                  "left_elbow", "right_elbow", "left_wrist", "right_wrist"))
+        for joint in ("left_elbow", "right_elbow"):
+            elbow = next(node for node in walk(ground_root) if node.get("name") == joint)
+            assert min(key["rotation"]["x"] for key in elbow[field]) >= 0
     assert all(any(key == "animation" or key.startswith("animation_")
                    for key in next(node for node in walk(root) if node.get("name") == joint))
                for joint in ("left_knee", "right_knee", "left_ankle", "right_ankle",
