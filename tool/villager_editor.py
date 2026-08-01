@@ -545,8 +545,10 @@ def self_test():
     assert max(pose[2][1] for pose in running["body_motion"]) >= .13
     walking_animation = next(item for item in root["listAnim"] if item["name"] == "walking")
     walking_field = animation_field(walking_animation["id"])
-    assert max(key["rotation"]["x"] for key in next(
-        node for node in walk(root) if node.get("name") == "left_elbow")[walking_field]) < 0
+    assert min(key["rotation"]["x"] for key in next(
+        node for node in walk(root) if node.get("name") == "left_elbow")[walking_field]) > 0
+    assert len({(profile["arm_bias"], profile["arm_roll"], profile["asym"], profile["look"])
+                for profile in WALKING.values()}) == len(WALKING)
     assert all(max(pose[1][0] for pose in ACTION_SPECS[action][2]["left_elbow"]) < 0
                for action in ("locomotion_running", "locomotion_sneaking",
                               "locomotion_limping", "locomotion_carrying_walk"))

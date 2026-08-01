@@ -18,16 +18,16 @@ DEFAULT_SPEEDUP = 1.2
 REFERENCE_LEG_LENGTH = .52
 
 PROFILES = {
-    "neutral": dict(duration=24, speed=1.00, stride=25, arm=21, knee=34, ankle=10, elbow=11, wrist=3, bob=.040, sway=1.5, lean=.5, head=1, twist=3),
-    "brisk": dict(duration=20, speed=1.45, stride=36, arm=31, knee=46, ankle=14, elbow=20, wrist=5, bob=.065, sway=2.4, lean=2, head=2, twist=4),
-    "heavy": dict(duration=32, speed=.85, stride=22, arm=17, knee=31, ankle=9, elbow=16, wrist=4, bob=.075, sway=3.6, lean=2, head=2, twist=2.5),
-    "cautious": dict(duration=36, speed=.65, stride=16, arm=11, knee=26, ankle=8, elbow=10, wrist=3, bob=.030, sway=1.8, lean=2.5, head=4, twist=2),
-    "elder": dict(duration=40, speed=.50, stride=13, arm=9, knee=23, ankle=7, elbow=14, wrist=4, bob=.025, sway=3.2, lean=3, head=3, twist=1.5),
-    "proud": dict(duration=32, speed=.90, stride=19, arm=8, knee=28, ankle=8, elbow=6, wrist=2, bob=.032, sway=1.2, lean=0, head=1, twist=2.5),
-    "monster": dict(duration=28, speed=1.05, stride=27, arm=15, knee=38, ankle=12, elbow=24, wrist=6, bob=.060, sway=4.0, lean=7, head=5, twist=5),
-    "villain": dict(duration=28, speed=1.00, stride=25, arm=11, knee=34, ankle=10, elbow=14, wrist=4, bob=.035, sway=1.6, lean=1, head=2, twist=6),
-    "idiot": dict(duration=24, speed=1.20, stride=31, arm=35, knee=48, ankle=15, elbow=25, wrist=7, bob=.085, sway=5.0, lean=-1, head=6, twist=7),
-    "barbarian": dict(duration=24, speed=1.35, stride=34, arm=28, knee=46, ankle=14, elbow=22, wrist=6, bob=.080, sway=4.8, lean=3, head=3, twist=6),
+    "neutral": dict(duration=24, speed=1.00, stride=25, arm=21, knee=34, ankle=10, elbow=13, wrist=3, bob=.040, sway=1.5, lean=.5, head=1, twist=3, arm_bias=0, arm_roll=2, asym=0, look=0),
+    "brisk": dict(duration=20, speed=1.45, stride=40, arm=36, knee=52, ankle=16, elbow=24, wrist=6, bob=.075, sway=2.8, lean=4, head=2, twist=5, arm_bias=-3, arm_roll=4, asym=.08, look=-1),
+    "heavy": dict(duration=32, speed=.85, stride=25, arm=19, knee=36, ankle=10, elbow=24, wrist=5, bob=.100, sway=5.5, lean=4, head=3, twist=3, arm_bias=5, arm_roll=8, asym=.12, look=2),
+    "cautious": dict(duration=36, speed=.65, stride=14, arm=9, knee=29, ankle=8, elbow=27, wrist=5, bob=.025, sway=1.2, lean=6, head=8, twist=2, arm_bias=-15, arm_roll=3, asym=.18, look=5),
+    "elder": dict(duration=40, speed=.50, stride=12, arm=7, knee=27, ankle=7, elbow=30, wrist=5, bob=.035, sway=4.5, lean=9, head=4, twist=1.5, arm_bias=-12, arm_roll=5, asym=.15, look=4),
+    "proud": dict(duration=32, speed=.90, stride=22, arm=7, knee=30, ankle=8, elbow=10, wrist=2, bob=.025, sway=.8, lean=-3, head=1, twist=3, arm_bias=4, arm_roll=1, asym=0, look=-5),
+    "monster": dict(duration=28, speed=1.05, stride=32, arm=18, knee=45, ankle=14, elbow=38, wrist=8, bob=.085, sway=6.5, lean=11, head=7, twist=8, arm_bias=-18, arm_roll=12, asym=.28, look=7),
+    "villain": dict(duration=28, speed=1.00, stride=27, arm=10, knee=38, ankle=11, elbow=26, wrist=5, bob=.030, sway=1.2, lean=4, head=6, twist=9, arm_bias=-10, arm_roll=4, asym=.32, look=-2),
+    "idiot": dict(duration=24, speed=1.20, stride=37, arm=44, knee=57, ankle=18, elbow=32, wrist=10, bob=.120, sway=8.0, lean=-4, head=10, twist=11, arm_bias=3, arm_roll=11, asym=.35, look=-6),
+    "barbarian": dict(duration=24, speed=1.35, stride=39, arm=34, knee=53, ankle=17, elbow=34, wrist=8, bob=.105, sway=7.0, lean=7, head=4, twist=9, arm_bias=-8, arm_roll=10, asym=.18, look=2),
 }
 
 SHOWCASES = {
@@ -82,6 +82,7 @@ def add_animations(root, styles, generic_name=False, movement_speed=None, leg_le
         stride, arm = profile["stride"], profile["arm"]
         sway, lean, head = profile["sway"], profile["lean"], profile["head"]
         twist = profile["twist"]
+        arm_bias, arm_roll, asym = (profile[key] for key in ("arm_bias", "arm_roll", "asym"))
         identifier = first_id + offset
         field = animation_field(identifier)
 
@@ -97,7 +98,11 @@ def add_animations(root, styles, generic_name=False, movement_speed=None, leg_le
         )
         find(root, "Head Rig")[field] = cycle_frames(
             find(root, "Head Rig"), duration,
-            ((lean * .35, -head, -sway * .45), (lean * .35, 0, 0), (lean * .35, head, sway * .45), (lean * .35, 0, 0), (lean * .35, -head, -sway * .45)),
+            (((lean * .35) + profile["look"], -head, -sway * .45),
+             ((lean * .35) + profile["look"], 0, 0),
+             ((lean * .35) + profile["look"], head, sway * .45),
+             ((lean * .35) + profile["look"], 0, 0),
+             ((lean * .35) + profile["look"], -head, -sway * .45)),
         )
         find(root, "left_leg")[field] = cycle_frames(
             find(root, "left_leg"), duration,
@@ -109,11 +114,15 @@ def add_animations(root, styles, generic_name=False, movement_speed=None, leg_le
         )
         find(root, "left_arm")[field] = cycle_frames(
             find(root, "left_arm"), duration,
-            ((-arm, 0, -2), (0, 0, 0), (arm, 0, 2), (0, 0, 0), (-arm, 0, -2)),
+            ((-arm * (1 + asym) + arm_bias, 0, -arm_roll), (arm_bias, 0, 0),
+             (arm * (1 + asym) + arm_bias, 0, arm_roll), (arm_bias, 0, 0),
+             (-arm * (1 + asym) + arm_bias, 0, -arm_roll)),
         )
         find(root, "right_arm")[field] = cycle_frames(
             find(root, "right_arm"), duration,
-            ((arm, 0, 2), (0, 0, 0), (-arm, 0, -2), (0, 0, 0), (arm, 0, 2)),
+            ((arm * (1 - asym) + arm_bias, 0, arm_roll), (arm_bias, 0, 0),
+             (-arm * (1 - asym) + arm_bias, 0, -arm_roll), (arm_bias, 0, 0),
+             (arm * (1 - asym) + arm_bias, 0, arm_roll)),
         )
         knee, ankle, elbow, wrist = (profile[key] for key in ("knee", "ankle", "elbow", "wrist"))
         joint_cycles = {
@@ -121,10 +130,10 @@ def add_animations(root, styles, generic_name=False, movement_speed=None, leg_le
             "right_knee": (-18, -knee, -4, -8, -18),
             "left_ankle": (ankle, 0, -ankle * .8, ankle * .5, ankle),
             "right_ankle": (-ankle * .8, ankle * .5, ankle, 0, -ankle * .8),
-            "left_elbow": (-elbow * .65, -elbow * .8, -elbow, -elbow * .8, -elbow * .65),
-            "right_elbow": (-elbow, -elbow * .8, -elbow * .65, -elbow * .8, -elbow),
-            "left_wrist": (wrist, 0, -wrist, 0, wrist),
-            "right_wrist": (-wrist, 0, wrist, 0, -wrist),
+            "left_elbow": (elbow * .65, elbow * .8, elbow, elbow * .8, elbow * .65),
+            "right_elbow": (elbow, elbow * .8, elbow * .65, elbow * .8, elbow),
+            "left_wrist": (-wrist, 0, wrist, 0, -wrist),
+            "right_wrist": (wrist, 0, -wrist, 0, wrist),
         }
         for joint, rotations in joint_cycles.items():
             node = find(root, joint)
