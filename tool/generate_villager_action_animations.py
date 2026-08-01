@@ -236,6 +236,40 @@ def split_ground_pose(profile, enter_end, exit_start):
     return parts
 
 
+def animate_ground_loop(name, profile):
+    def rotate(key, motions):
+        base = profile[key][0][1]
+        profile[key] = [(time, tuple(value + offset for value, offset in zip(base, rotation)))
+                        for time, rotation in motions]
+
+    if name == "sleep":
+        profile["duration"] *= 2
+        for key, poses in list(profile.items()):
+            if isinstance(poses, (list, tuple)):
+                profile[key] = [(pose[0] * 2, *pose[1:]) for pose in poses]
+        return
+
+    profile["duration"] = 64
+    if name == "sit":
+        profile["body"] = [(0,), (16, (-1, 0, -.6)), (32, (.5, 0, .7)), (48, (-.7, 0, -.4)), (64,)]
+        profile["head"] = [(0,), (16, (1, -4, -1)), (32, (-1, 3, 1)), (48, (.5, -2, -.5)), (64,)]
+    else:
+        rotation, position = profile["upper_body_motion"][0][1:]
+        profile["upper_body_motion"] = [
+            (0, rotation, position), (16, (rotation[0] + 1, -1, -.5), (0, .004, 0)),
+            (32, (rotation[0] - .5, 1, .5), (0, .007, 0)),
+            (48, (rotation[0] + .5, -.5, -.3), (0, .003, 0)), (64, rotation, position),
+        ]
+        rotate("head", ((0, (0, 0, 0)), (16, (1, -4, -1)), (32, (-.5, 3, .7)),
+                        (48, (.5, -2, -.5)), (64, (0, 0, 0))))
+    rotate("left_arm", ((0, (0, 0, 0)), (20, (1.5, -1, -.7)), (40, (-.7, .5, .4)), (64, (0, 0, 0))))
+    rotate("right_arm", ((0, (0, 0, 0)), (20, (-.7, .5, .4)), (40, (1.5, -1, -.7)), (64, (0, 0, 0))))
+    rotate("left_elbow", ((0, (0, 0, 0)), (20, (-2, 0, 0)), (40, (1, 0, 0)), (64, (0, 0, 0))))
+    rotate("right_elbow", ((0, (0, 0, 0)), (20, (1, 0, 0)), (40, (-2, 0, 0)), (64, (0, 0, 0))))
+    rotate("left_wrist", ((0, (0, 0, 0)), (24, (1, 0, 0)), (48, (-.5, 0, 0)), (64, (0, 0, 0))))
+    rotate("right_wrist", ((0, (0, 0, 0)), (24, (-.5, 0, 0)), (48, (1, 0, 0)), (64, (0, 0, 0))))
+
+
 def body_motion_track(node, poses, rotate=True):
     return [frame(node, time, rotation=(-rotation[0], rotation[1], rotation[2]) if rotate else (0, 0, 0), position=position)
             for time, rotation, position in poses]
@@ -277,7 +311,9 @@ def specifications():
     for category, actions in ACTIONS.items():
         for name, profile in actions.items():
             if category == "daily" and name in GROUND_SPLITS:
-                for suffix, part in zip(("enter", "loop", "exit"), split_ground_pose(profile, *GROUND_SPLITS[name])):
+                parts = split_ground_pose(profile, *GROUND_SPLITS[name])
+                animate_ground_loop(name, parts[1])
+                for suffix, part in zip(("enter", "loop", "exit"), parts):
                     result.append((category, f"{name}_{suffix}", part))
             else:
                 result.append((category, name, profile))

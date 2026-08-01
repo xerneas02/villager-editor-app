@@ -564,10 +564,14 @@ def self_test():
             assert enter[key][-1][1:] == loop[key][0][1:]
             assert loop[key][0][1:] == loop[key][-1][1:]
             assert loop[key][-1][1:] == leave[key][0][1:]
+        assert any(len({pose[1:] for pose in poses}) > 1 for key, poses in loop.items()
+                   if key not in ("duration", "upper_motion"))
     kneel_enter = ACTION_SPECS["daily_kneel_enter"][2]
     kneel_loop = ACTION_SPECS["daily_kneel_loop"][2]
     assert kneel_enter["right_knee"][2][1][0] > kneel_enter["left_knee"][2][1][0]
     assert kneel_loop["left_leg"][0][1][0] == -88 and kneel_loop["right_leg"][0][1][0] == 2
+    assert all(len({pose[1:] for pose in kneel_loop[key]}) == 1
+               for key in ("left_leg", "right_leg", "left_knee", "right_knee", "left_ankle", "right_ankle"))
     ground_root = compose({**sample, "actions": list(ground_actions)})
     for action in ground_actions:
         animation = next(item for item in ground_root["listAnim"] if item["name"] == action)
