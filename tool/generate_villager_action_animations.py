@@ -99,29 +99,33 @@ ACTIONS = {
                 "left_wrist": [(0,), (12, (10, 0, 0)), (40, (10, 0, 0)), (52,)], "right_wrist": [(0,), (12, (10, 0, 0)), (40, (10, 0, 0)), (52,)]},
         "kneel": {"duration": 88, "upper_motion": True,
                   "body_motion": [(0, (0, 0, 0), (0, 0, 0)), (10, (4, 0, -2), (.015, -.04, 0)),
-                                  (24, (8, 0, -3), (.035, -.17, .03)), (38, (7, 0, -1), (.015, -.29, .05)),
-                                  (46, (5, 0, 0), (0, -.32, .06)), (64, (5, 0, 0), (0, -.32, .06)),
+                                  (24, (8, 0, -3), (.035, -.17, .03)),
+                                  (46, (8.26, 0, 0), (0, -.32, .06)), (64, (5, 0, 0), (0, -.32, .06)),
                                   (72, (8, 0, -3), (.035, -.17, .03)), (82, (4, 0, -2), (.015, -.04, 0)),
                                   (88, (0, 0, 0), (0, 0, 0))],
-                  "left_leg": [(0,), (10, (-18, 0, -2)), (24, (-68, 0, -5)), (38, (-84, 0, -3)),
-                               (46, (-88, 0, 0)), (64, (-88, 0, 0)), (72, (-68, 0, -5)), (82, (-18, 0, -2)), (88,)],
-                  "right_leg": [(0,), (10, (-10, 0, 2)), (24, (-42, 0, 7)), (38, (-78, 0, 4)),
-                                (46, (-88, 0, 0)), (64, (-88, 0, 0)), (72, (-42, 0, 7)), (82, (-10, 0, 2)), (88,)],
-                  "left_knee": [(0,), (10, (22, 0, 0)), (24, (104, 0, 0)), (38, (112, 0, 0)),
-                                (46, (114, 0, 0)), (64, (114, 0, 0)), (72, (104, 0, 0)), (82, (22, 0, 0)), (88,)],
-                  "right_knee": [(0,), (10, (16, 0, 0)), (24, (76, 0, 0)), (38, (108, 0, 0)),
-                                 (46, (114, 0, 0)), (64, (114, 0, 0)), (72, (76, 0, 0)), (82, (16, 0, 0)), (88,)],
+                  "upper_body_motion": [(0, (0, 0, 0), (0, 0, 0)), (10, (14.4, .36, -1.97), (0, 0, 0)),
+                                        (24, (8, 0, -3), (0, 0, 0)), (46, (8.26, 0, 0), (0, -.021, .022)),
+                                        (64, (5, 0, 0), (0, 0, 0)), (72, (8, 0, -3), (0, 0, 0)),
+                                        (82, (4, 0, -2), (0, 0, 0)), (88, (0, 0, 0), (0, 0, 0))],
+                  "left_leg": [(0,), (10, (-40.6, -.77, -1.85)), (24, (-85.32, -1.49, -4.77)),
+                               (46, (-28, 0, 0)), (64, (-88, 0, 0)), (72, (-68, 0, -5)), (82, (-18, 0, -2)), (88,)],
+                  "right_leg": [(0,), (10, (-10, 0, 2)), (24, (-42, 0, 7)), (46, (-37.34, -1.57, 2.73)),
+                                (64, (2, 0, 0)), (72, (-42, 0, 7)), (82, (-10, 0, 2)), (88,)],
+                  "left_knee": [(0,), (10, (37, 0, 0)), (24, (104, 0, 0)), (46, (114, 0, 0)),
+                                (64, (114, 0, 0)), (72, (104, 0, 0)), (82, (22, 0, 0)), (88,)],
+                  "right_knee": [(0,), (10, (76, 0, 0)), (24, (136, 0, 0)),
+                                 (64, (114, 0, 0)), (72, (76, 0, 0)), (82, (16, 0, 0)), (88,)],
                   "left_ankle": [(0,), (10, (-5, 0, 0)), (24, (-20, 0, 0)), (46, (-24, 0, 0)),
                                  (64, (-24, 0, 0)), (72, (-20, 0, 0)), (82, (-5, 0, 0)), (88,)],
-                  "right_ankle": [(0,), (10, (-4, 0, 0)), (24, (-12, 0, 0)), (38, (-21, 0, 0)),
-                                  (46, (-24, 0, 0)), (64, (-24, 0, 0)), (72, (-12, 0, 0)), (82, (-4, 0, 0)), (88,)],
-                  "left_arm": [(0,), (10, (8, 0, -3)), (24, (24, 0, -6)), (38, (20, 0, -5)),
-                               (46, (18, 0, -5)), (64, (18, 0, -5)), (72, (24, 0, -6)), (82, (8, 0, -3)), (88,)],
-                  "right_arm": [(0,), (10, (8, 0, 3)), (24, (24, 0, 6)), (38, (20, 0, 5)),
-                                (46, (18, 0, 5)), (64, (18, 0, 5)), (72, (24, 0, 6)), (82, (8, 0, 3)), (88,)],
-                  "left_elbow": [(0,), (10, (-18, 0, 0)), (24, (-42, 0, 0)), (46, (-48, 0, 0)),
+                  "right_ankle": [(0,), (10, (-4, 0, 0)), (24, (-12, 0, 0)),
+                                  (64, (-24, 0, 0)), (72, (-12, 0, 0)), (82, (-4, 0, 0)), (88,)],
+                  "left_arm": [(0,), (10, (-21.97, -1.5, -2.6)), (24, (-35.86, -5.19, -3.01)), (38, (20, 0, -5)),
+                               (46, (-10.21, -2.57, 2.36)), (64, (18, 0, -5)), (72, (24, 0, -6)), (82, (8, 0, -3)), (88,)],
+                  "right_arm": [(0,), (10, (8, 0, 3)), (24, (24, 0, 6)),
+                                (46, (-11.91, 2.5, -2.07)), (64, (18, 0, 5)), (72, (24, 0, 6)), (82, (8, 0, 3)), (88,)],
+                  "left_elbow": [(0,), (10, (-18, 0, 30)), (24, (-64.21, -20.7, 49.11)), (46, (-48.14, -33.63, 25.74)),
                                  (64, (-48, 0, 0)), (72, (-42, 0, 0)), (82, (-18, 0, 0)), (88,)],
-                  "right_elbow": [(0,), (10, (-18, 0, 0)), (24, (-42, 0, 0)), (46, (-48, 0, 0)),
+                  "right_elbow": [(0,), (10, (-18, 0, 0)), (24, (-42, 0, 0)), (46, (-49.19, 33.21, -26.31)),
                                   (64, (-48, 0, 0)), (72, (-42, 0, 0)), (82, (-18, 0, 0)), (88,)],
                   "left_wrist": [(0,), (24, (8, 0, 0)), (46, (10, 0, 0)), (64, (10, 0, 0)), (72, (8, 0, 0)), (88,)],
                   "right_wrist": [(0,), (24, (8, 0, 0)), (46, (10, 0, 0)), (64, (10, 0, 0)), (72, (8, 0, 0)), (88,)],
@@ -141,7 +145,7 @@ ACTIONS = {
                   "right_elbow": [(0,), (18, (-32, 0, 0)), (30, (-44, 0, 0)), (40, (-48, 0, 0)), (56, (-45, 0, 0)), (68, (-50, 0, 0)), (78, (-48, 0, 0)), (90, (-34, 0, 0)), (108,)],
                   "left_wrist": [(0,), (30, (8, 0, 0)), (40, (10, 0, 0)), (78, (10, 0, 0)), (90, (7, 0, 0)), (108,)],
                   "right_wrist": [(0,), (30, (8, 0, 0)), (40, (12, 0, 0)), (78, (12, 0, 0)), (90, (7, 0, 0)), (108,)],
-                  "eyes": ((0, 1, 0, 0, 0), (38, 1, 0, 0, 0), (42, .025, 0, 0, 0), (78, .025, 0, 0, 0), (82, 1, 0, 0, 0), (108, 1, 0, 0, 0))},
+                  "eyes": ((0, 1, 0, 0, 0), (38, 1, 0, 0, 0), (40, .025, 0, 0, 0), (78, .025, 0, 0, 0), (82, 1, 0, 0, 0), (108, 1, 0, 0, 0))},
         "eat": {"duration": 40, "head": [(0,), (8, (6, 0, 0)), (32, (6, 0, 0)), (40,)],
                  "right_arm": [(0,), (6, (-105, 0, 5)), (11, (-82, 0, 5)), (17, (-106, 0, 5)), (23, (-82, 0, 5)), (29, (-105, 0, 5)), (34, (-85, 0, 5)), (40,)]},
         "drink": {"duration": 42, "head": [(0,), (8, (-8, 0, 0)), (30, (-12, 0, 0)), (35, (-5, 0, 0)), (42,)],
@@ -208,6 +212,29 @@ FACE_PEAKS = {
     "surprise": (3, .085, 1.16, 0, .02, .012, -.32),
 }
 
+GROUND_SPLITS = {"sit": (12, 40), "kneel": (64, 64), "sleep": (40, 78)}
+
+
+def split_ground_pose(profile, enter_end, exit_start):
+    """Turn a stand/pose/stand track into enter, stable loop, and exit tracks."""
+    parts = [{"duration": enter_end}, {"duration": max(20, exit_start - enter_end)},
+             {"duration": profile["duration"] - exit_start}]
+    for part in parts:
+        for key in ("upper_motion",):
+            if key in profile:
+                part[key] = profile[key]
+    for key, poses in profile.items():
+        if key in ("duration", "upper_motion"):
+            continue
+        assert any(pose[0] == enter_end for pose in poses) and any(pose[0] == exit_start for pose in poses)
+        enter = [pose for pose in poses if pose[0] <= enter_end]
+        middle = [(pose[0] - enter_end, *pose[1:]) for pose in poses if enter_end <= pose[0] <= exit_start]
+        leave = [(pose[0] - exit_start, *pose[1:]) for pose in poses if pose[0] >= exit_start]
+        if enter_end == exit_start:
+            middle = [(0, *middle[0][1:]), (parts[1]["duration"], *middle[0][1:])]
+        parts[0][key], parts[1][key], parts[2][key] = enter, middle, leave
+    return parts
+
 
 def body_motion_track(node, poses, rotate=True):
     return [frame(node, time, rotation=(-rotation[0], rotation[1], rotation[2]) if rotate else (0, 0, 0), position=position)
@@ -246,7 +273,14 @@ def apply_face(root, field, face_name, duration, facial_rigs, transition=False):
 
 
 def specifications():
-    result = [(category, name, profile) for category, actions in ACTIONS.items() for name, profile in actions.items()]
+    result = []
+    for category, actions in ACTIONS.items():
+        for name, profile in actions.items():
+            if category == "daily" and name in GROUND_SPLITS:
+                for suffix, part in zip(("enter", "loop", "exit"), split_ground_pose(profile, *GROUND_SPLITS[name])):
+                    result.append((category, f"{name}_{suffix}", part))
+            else:
+                result.append((category, name, profile))
     for emotion in EMOTIONS:
         result.append(("transitions", f"to_{emotion}", {
             "duration": 12, "face": emotion, "transition": True,
@@ -313,9 +347,9 @@ def add_animations(root, specs, generic=False):
         if "body_motion" in profile:
             if category == "locomotion" or profile.get("upper_motion"):
                 character[field] = body_motion_track(character, profile["body_motion"], rotate=False)
-                upper[field] = body_motion_track(upper, [
+                upper[field] = body_motion_track(upper, profile.get("upper_body_motion", [
                     (time, rotation, (0, 0, 0)) for time, rotation, _ in profile["body_motion"]
-                ])
+                ]))
                 if category == "locomotion":
                     head = find(root, "Head Rig")
                     head[field] = body_motion_track(head, [

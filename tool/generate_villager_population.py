@@ -22,13 +22,16 @@ ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_DIR = ROOT / "bdengine" / "characters" / "villagers" / "population"
 PREVIEW_DIR = ROOT / "previews" / "characters" / "villagers" / "population"
 
+SIT = ("daily_sit_enter", "daily_sit_loop", "daily_sit_exit")
+KNEEL = ("daily_kneel_enter", "daily_kneel_loop", "daily_kneel_exit")
+SLEEP = ("daily_sleep_enter", "daily_sleep_loop", "daily_sleep_exit")
 COMMON = ("gesture_yes", "gesture_no", "gesture_wave", "reaction_hurt", "reaction_alert",
-          "daily_sit", "daily_sleep", "daily_eat", "daily_drink", "daily_pick_up", "daily_put_down")
+          *SIT, *SLEEP, "daily_eat", "daily_drink", "daily_pick_up", "daily_put_down")
 FARMER = ("profession_hoe", "profession_sow", "profession_harvest", "locomotion_carrying_walk")
 SMITH = ("profession_hammer", "locomotion_carrying_walk")
 GUARD = ("profession_guard", "gesture_point", "reaction_suspicious", "locomotion_running")
 HUNTER = ("profession_shoot_bow", "reaction_suspicious", "locomotion_sneaking", "locomotion_running")
-CLERGY = ("profession_pray", "daily_kneel", "reaction_cry")
+CLERGY = ("profession_pray", *KNEEL, "reaction_cry")
 NOBLE = ("gesture_point", "gesture_shrug", "profession_pray")
 TRADER = ("gesture_point", "gesture_shrug", "locomotion_carrying_walk")
 WORKER = ("locomotion_carrying_walk", "profession_harvest")

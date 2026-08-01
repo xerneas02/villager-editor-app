@@ -35,6 +35,8 @@ PREVIEW_DIR = ROOT / "previews" / "characters" / "villagers" / "editor"
 EXPORT_DIR = ROOT / "bdengine" / "characters" / "villagers" / "custom"
 ACTION_SPECS = {f"{category.removesuffix('s')}_{name}": (category, name, profile)
                 for category, name, profile in specifications()}
+GROUND_ACTION_ALIASES = {f"daily_{pose}": tuple(f"daily_{pose}_{phase}" for phase in ("enter", "loop", "exit"))
+                         for pose in ("sit", "kneel", "sleep")}
 BUILD_LOCK = threading.Lock()
 PREVIEW_KEYS = ("eyebrows", "nose", "ears", "hair", "hairColor", "skinColor", "pupilColor", "pupilStyle", "facialHair", "hat", "horns", "tail", "wings", "bodyType", "outfit", "accessory", "scale", "scaleMode", "scaleHead", "headScale")
 LAST_PREVIEW = None
@@ -231,7 +233,8 @@ def validate(config):
             raise ValueError(f"Couleur de {label} invalide")
         result[key] = color.upper()
     emotions = config.get("emotions", [])
-    actions = config.get("actions", [])
+    actions = [expanded for action in config.get("actions", [])
+               for expanded in GROUND_ACTION_ALIASES.get(action, (action,))]
     if not isinstance(emotions, list) or any(value not in EMOTIONS for value in emotions):
         raise ValueError("Liste d’émotions invalide")
     if not isinstance(actions, list) or len(actions) > len(ACTION_SPECS) or any(value not in ACTION_SPECS for value in actions):
@@ -552,13 +555,19 @@ def self_test():
     assert all(max(pose[1][0] for pose in ACTION_SPECS[action][2]["left_elbow"]) < 0
                for action in ("locomotion_running", "locomotion_sneaking",
                               "locomotion_limping", "locomotion_carrying_walk"))
-    ground_actions = ("daily_sit", "daily_kneel", "daily_sleep")
-    assert all(ACTION_SPECS[action][2]["left_elbow"][1][1][0] < 0
-               for action in ("daily_sit", "daily_kneel", "daily_sleep"))
-    kneel = ACTION_SPECS["daily_kneel"][2]
-    assert kneel["left_knee"][2][1][0] > kneel["right_knee"][2][1][0]
-    assert kneel["left_knee"][4][1] == kneel["right_knee"][4][1]
-    assert kneel["left_arm"][4][1][0] == ACTION_SPECS["daily_sit"][2]["left_arm"][1][1][0]
+    ground_actions = tuple(f"daily_{pose}_{phase}" for pose in ("sit", "kneel", "sleep")
+                           for phase in ("enter", "loop", "exit"))
+    for pose in ("sit", "kneel", "sleep"):
+        enter, loop, leave = (ACTION_SPECS[f"daily_{pose}_{phase}"][2]
+                              for phase in ("enter", "loop", "exit"))
+        for key in set(enter) - {"duration", "upper_motion"}:
+            assert enter[key][-1][1:] == loop[key][0][1:]
+            assert loop[key][0][1:] == loop[key][-1][1:]
+            assert loop[key][-1][1:] == leave[key][0][1:]
+    kneel_enter = ACTION_SPECS["daily_kneel_enter"][2]
+    kneel_loop = ACTION_SPECS["daily_kneel_loop"][2]
+    assert kneel_enter["right_knee"][2][1][0] > kneel_enter["left_knee"][2][1][0]
+    assert kneel_loop["left_leg"][0][1][0] == -88 and kneel_loop["right_leg"][0][1][0] == 2
     ground_root = compose({**sample, "actions": list(ground_actions)})
     for action in ground_actions:
         animation = next(item for item in ground_root["listAnim"] if item["name"] == action)
@@ -569,11 +578,13 @@ def self_test():
         for joint in ("left_elbow", "right_elbow"):
             elbow = next(node for node in walk(ground_root) if node.get("name") == joint)
             assert min(key["rotation"]["x"] for key in elbow[field]) >= 0
-        if action == "daily_kneel":
+        if action == "daily_kneel_loop":
             left_leg = next(node for node in walk(ground_root) if node.get("name") == "left_leg")[field]
+            right_leg = next(node for node in walk(ground_root) if node.get("name") == "right_leg")[field]
             left_knee = next(node for node in walk(ground_root) if node.get("name") == "left_knee")[field]
-            assert next(key for key in left_leg if key["time"] == 46)["rotation"]["x"] > 0
-            assert next(key for key in left_knee if key["time"] == 46)["rotation"]["x"] < 0
+            assert left_leg[0]["rotation"]["x"] > 0 > right_leg[0]["rotation"]["x"]
+            assert left_knee[0]["rotation"]["x"] < 0
+    assert validate({**sample, "actions": ["daily_sit", "daily_kneel", "daily_sleep"]})["actions"] == list(ground_actions)
     assert all(any(key == "animation" or key.startswith("animation_")
                    for key in next(node for node in walk(root) if node.get("name") == joint))
                for joint in ("left_knee", "right_knee", "left_ankle", "right_ankle",
@@ -630,7 +641,7 @@ def self_test():
     upper_rig = next(node for node in walk(winged) if node.get("name") == "Upper Body Rig")
     assert len(wing_rigs) == 4 and all("animation" in rig for rig in wing_rigs)
     assert any(node is wing_group for node in walk(upper_rig))
-    assert root["editorAnimationCount"] == len(root["listAnim"]) == 21
+    assert root["editorAnimationCount"] == len(root["listAnim"]) == 3 + len(sample["emotions"]) + len(sample["actions"])
     assert [animation["name"] for animation in root["listAnim"][:3]] == ["waiting", "talking", "walking"]
     all_base = validate({**sample, "waitingAnimations": list(WAITING),
                          "talkingAnimations": list(TALKING), "walkingAnimations": list(WALKING)})
