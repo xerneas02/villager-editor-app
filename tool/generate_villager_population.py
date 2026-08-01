@@ -27,7 +27,7 @@ KNEEL = ("daily_kneel_enter", "daily_kneel_loop", "daily_kneel_exit")
 SLEEP = ("daily_sleep_enter", "daily_sleep_loop", "daily_sleep_exit")
 COMMON = ("gesture_yes", "gesture_no", "gesture_wave", "reaction_hurt", "reaction_alert",
           "locomotion_jump", "locomotion_walking_jump", "locomotion_running_jump",
-          *SIT, *SLEEP, "daily_eat", "daily_drink", "daily_pick_up", "daily_put_down")
+          *SIT, *SLEEP, "daily_eat", "daily_drink", "daily_pick_up", "daily_put_down", "death_fall_back")
 FARMER = ("profession_hoe", "profession_sow", "profession_harvest", "locomotion_carrying_walk")
 SMITH = ("profession_hammer", "locomotion_carrying_walk")
 GUARD = ("profession_guard", "gesture_point", "reaction_suspicious", "locomotion_running")
@@ -38,7 +38,7 @@ TRADER = ("gesture_point", "gesture_shrug", "locomotion_carrying_walk")
 WORKER = ("locomotion_carrying_walk", "profession_harvest")
 TRAVELER = ("locomotion_running", "locomotion_sneaking", "locomotion_carrying_walk")
 GOBLIN_RAIDER = ("villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash",
-                  "locomotion_running", "locomotion_sneaking", "reaction_suspicious")
+                  "locomotion_running", "locomotion_sneaking", "reaction_suspicious", "death_monster")
 
 APPEARANCE_OVERRIDES = {
     "goblin_raider": {"skinColor": "#424D3D", "pupilColor": "#621609", "bodyType": "goblin"},

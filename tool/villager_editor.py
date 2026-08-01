@@ -601,6 +601,15 @@ def self_test():
     assert min(pose[1][0] for pose in slash["right_wrist"] if len(pose) > 1) < 0 < \
            max(pose[1][0] for pose in slash["right_wrist"] if len(pose) > 1)
     assert villains["intimidate"]["left_leg"][1][1][2] < 0 < villains["intimidate"]["right_leg"][1][1][2]
+    deaths = {name: ACTION_SPECS[f"death_{name}"][2] for name in ("fall_back", "kneeling", "monster")}
+    assert all(all(joint in profile for joint in articulation_joints) for profile in deaths.values())
+    assert all(profile["body_motion"][-1][0] == profile["duration"] and profile["eyes"][-1][1] < .1
+               for profile in deaths.values())
+    death_root = compose({**sample, "actions": ["death_fall_back"]})
+    death_animation = next(item for item in death_root["listAnim"] if item["name"] == "death_fall_back")
+    death_field = animation_field(death_animation["id"])
+    death_character = next(node for node in walk(death_root) if node.get("name") == "Character Rig")
+    assert abs(death_character[death_field][-1]["rotation"]["x"]) > 1.5
     transitions = {name: ACTION_SPECS[f"transition_to_{name}"][2]
                    for name in ("anger", "joy", "sadness", "fear", "surprise")}
     assert all(all(joint in profile for joint in articulation_joints)
@@ -790,10 +799,12 @@ def self_test():
         scabbard = next(spec for spec in make_accessory("sword_scabbard", profile)["Torso"]
                         if spec[0] == "scabbard_body")
         assert max(profile["waist"], profile.get("belly", 0)) / 2 < scabbard[1][0] < profile["shoulder"]
-    assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash"} <= set(ACTION_SPECS)
+    assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash",
+            "death_fall_back", "death_kneeling", "death_monster"} <= set(ACTION_SPECS)
     goblin = CATALOG["presets"]["goblin_raider"]
     assert goblin["bodyType"] == "goblin" and goblin["skinColor"] == "#424D3D"
     assert {"villain_threaten", "villain_evil_laugh", "villain_intimidate", "villain_slash"} <= set(goblin["actions"])
+    assert {"death_fall_back", "death_monster"} <= set(goblin["actions"])
     assert CATALOG["presets"]["chubby_villager"]["bodyType"] == "chubby"
     assert abs(sum(preset["scale"] for preset in CATALOG["presets"].values()) /
                len(CATALOG["presets"]) - 1.9) < .02
