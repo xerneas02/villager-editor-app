@@ -12,7 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-from generate_villager_action_animations import add_animations as add_actions, specifications
+from generate_villager_action_animations import add_animations as add_actions, animation_field, specifications
 from generate_villager_accessories import CATEGORIES as ACCESSORIES, combine_with_outfit, make_accessory, walk
 from generate_villager_body import BODY_TYPES, group
 from generate_villager_clothing import PRESETS as OUTFIT_PRESETS, build as build_outfit
@@ -533,6 +533,14 @@ def self_test():
     assert all(len(running[joint]) >= 5 for joint in ("left_knee", "right_knee", "left_ankle", "right_ankle",
                                                      "left_elbow", "right_elbow", "left_wrist", "right_wrist"))
     assert max(pose[2][1] for pose in running["body_motion"]) >= .13
+    ground_actions = ("daily_sit", "daily_kneel", "daily_sleep")
+    ground_root = compose({**sample, "actions": list(ground_actions)})
+    for action in ground_actions:
+        animation = next(item for item in ground_root["listAnim"] if item["name"] == action)
+        field = animation_field(animation["id"])
+        assert all(field in next(node for node in walk(ground_root) if node.get("name") == joint)
+                   for joint in ("left_knee", "right_knee", "left_ankle", "right_ankle",
+                                 "left_elbow", "right_elbow", "left_wrist", "right_wrist"))
     assert all(any(key == "animation" or key.startswith("animation_")
                    for key in next(node for node in walk(root) if node.get("name") == joint))
                for joint in ("left_knee", "right_knee", "left_ankle", "right_ankle",
