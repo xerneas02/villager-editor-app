@@ -70,6 +70,80 @@ def pieces(specs, textures):
             for name, center, size, rotation, tone in specs]
 
 
+def anchor_joints(root, body_type):
+    """Add limb pivots without changing any display's world transform."""
+    identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+
+    def multiply(left, right):
+        return [sum(left[row * 4 + index] * right[index * 4 + column] for index in range(4))
+                for row in range(4) for column in range(4)]
+
+    def displays(node, parent=identity):
+        world = multiply(parent, node.get("transforms", identity))
+        if node.get("isItemDisplay"):
+            yield tuple(round(value, 10) for value in world)
+        for child in node.get("children", []):
+            yield from displays(child, world)
+
+    def find(name):
+        stack = [root]
+        while stack:
+            node = stack.pop()
+            if node.get("name") == name:
+                return node
+            stack.extend(node.get("children", []))
+        raise ValueError(f"Missing body group: {name}")
+
+    def shifted(node, pivot):
+        clone = copy.deepcopy(node)
+        matrix = clone.setdefault("transforms", identity.copy())
+        for index, value in zip((3, 7, 11), pivot):
+            matrix[index] -= value
+        if clone.get("defaultTransform"):
+            clone["defaultTransform"]["position"] = [
+                value - offset for value, offset in zip(clone["defaultTransform"]["position"], pivot)
+            ]
+        return clone
+
+    def split(limb, middle_name, end_name, middle_pivot, end_pivot, classify):
+        if any(child.get("name") == middle_name for child in limb.get("children", [])):
+            return
+        buckets = {"root": [], "middle": [], "end": []}
+        for child in limb.get("children", []):
+            if not child.get("isCollection"):
+                segment = classify(child.get("_part", ""))
+                buckets[segment].append(shifted(child, {"root": (0, 0, 0), "middle": middle_pivot, "end": end_pivot}[segment]))
+                continue
+            grouped = {"root": [], "middle": [], "end": []}
+            for piece in child.get("children", []):
+                grouped[classify(piece.get("_part", ""))].append(piece)
+            for segment, children in grouped.items():
+                if children:
+                    clone = copy.deepcopy(child)
+                    clone["children"] = copy.deepcopy(children)
+                    buckets[segment].append(shifted(clone, {"root": (0, 0, 0), "middle": middle_pivot, "end": end_pivot}[segment]))
+        end = group(end_name, tuple(value - offset for value, offset in zip(end_pivot, middle_pivot)), buckets["end"])
+        middle = group(middle_name, middle_pivot, [*buckets["middle"], end])
+        limb["children"] = [*buckets["root"], middle]
+
+    before = sorted(displays(root))
+    profile = BODY_TYPES[body_type]
+    for side, sign in (("left", -1), ("right", 1)):
+        arm_middle = (sign * .02, -.45, -.005)
+        arm_end = (sign * .02, -.63, -.01)
+        split(find(f"{side}_arm"), f"{side}_elbow", f"{side}_wrist", arm_middle, arm_end,
+              lambda part: "end" if any(word in part for word in ("hand", "wrist")) else
+              "middle" if any(word in part for word in ("forearm", "elbow", "cuff", "vambrace", "bracer")) else "root")
+        leg_middle = (0, .30 - profile["hip"], 0)
+        leg_end = (0, .10 - profile["hip"], 0)
+        split(find(f"{side}_leg"), f"{side}_knee", f"{side}_ankle", leg_middle, leg_end,
+              lambda part: "end" if any(word in part for word in ("foot", "ankle", "sabat", "boot")) else
+              "middle" if any(word in part for word in ("lower_leg", "knee", "greave", "shin", "trouser_lower", "guard_strip", "poleyn", "breeches_cuff", "noble_cuff")) else "root")
+    assert before == sorted(displays(root))
+    root["jointAnchors"] = ["shoulder", "elbow", "wrist", "hip", "knee", "ankle", "ear", "wing", "tail"]
+    return root
+
+
 def build(source, skin, tunic, trousers, boots, body_type="standard"):
     profile = BODY_TYPES[body_type]
     root = copy.deepcopy(load(source))

@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 from generate_villager_faces import find
+from generate_villager_body import group
 from generate_villager_hair import HEAD_DIR, hair_box
 from preview_bdengine import load
 
@@ -104,6 +105,33 @@ def original_ears(head):
     return ears
 
 
+def anchor_ears(root):
+    ears = next((node for node in _walk(root) if node.get("name", "").startswith("Ears -")), None)
+    if not ears or not ears.get("children") or any(child.get("name", "").endswith("Ear Rig") for child in ears["children"]):
+        return root
+    style = ears["name"].removeprefix("Ears - ")
+    specs = STYLES.get(style)
+    if not specs:
+        return root
+    _, x, y, z, size, _ = specs[0]
+    rigs = []
+    for side, sign in (("left", -1), ("right", 1)):
+        pivot = (sign * (x - size[0] / 2), y, z)
+        children = [child for child in ears["children"] if child.get("_part", "").startswith(f"{side}_")]
+        for child in children:
+            for index, value in zip((3, 7, 11), pivot):
+                child["transforms"][index] -= value
+        rigs.append(group(f"{side.title()} Ear Rig", pivot, children))
+    ears["children"] = rigs
+    return root
+
+
+def _walk(node):
+    yield node
+    for child in node.get("children", []):
+        yield from _walk(child)
+
+
 def build(style):
     root = copy.deepcopy(load(SOURCE))
     head = find(root, "head")
@@ -128,6 +156,7 @@ def build(style):
     })
     root["name"] = f"Villager Head - {style} ears"
     root["earStyle"] = style
+    anchor_ears(root)
     return [root], len(pieces)
 
 
@@ -141,7 +170,7 @@ def write(style, output):
     ears = decoded["children"][-1]
     assert decoded["earStyle"] == style
     assert ears["name"] == f"Ears - {style}"
-    assert len(ears["children"]) == count
+    assert sum(len(rig["children"]) for rig in ears["children"]) == count
     return count
 
 

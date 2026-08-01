@@ -10,9 +10,9 @@ from pathlib import Path
 from PIL import Image, ImageColor, ImageDraw
 
 from generate_villager_accessories import OUTFIT_DIR, combine_with_outfit, walk
-from generate_villager_body import BODY_DIR, BODY_TYPES
+from generate_villager_body import BODY_DIR, BODY_TYPES, anchor_joints
 from generate_villager_clothing import PRESETS as OUTFIT_PRESETS, build as build_outfit
-from generate_villager_ears import EAR_DIR, original_ears
+from generate_villager_ears import EAR_DIR, anchor_ears, original_ears
 from generate_villager_faces import find
 from generate_villager_hair import HAIR_DIR, HEAD_DIR, STYLES as HAIR_STYLES, build as build_hair, texture, tint
 from generate_villager_hats import HATS, build as build_hat
@@ -273,6 +273,8 @@ def build(name, preset, skin_color="#ECB880", body_type=None, pupil_color="#4240
 
     recolor_skin(root, skin_color)
     color_pupils(root, pupil_color)
+    anchor_ears(root)
+    anchor_joints(root, build_body)
 
     root["name"] = f"Villager Example - {name}"
     root["examplePreset"] = {

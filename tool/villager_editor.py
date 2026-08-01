@@ -509,6 +509,15 @@ def self_test():
     root = compose(sample)
     assert root["faceStyle"] == "feminine_thin_eyebrows"
     assert (root["mainNBT"], root["nbt"]) == (sample["name"], str(sample["walkSpeed"]))
+    for chain in (("left_arm", "left_elbow", "left_wrist"), ("right_arm", "right_elbow", "right_wrist"),
+                  ("left_leg", "left_knee", "left_ankle"), ("right_leg", "right_knee", "right_ankle")):
+        parent = next(node for node in walk(root) if node.get("name") == chain[0])
+        for name in chain[1:]:
+            parent = next(child for child in parent["children"] if child.get("name") == name)
+        assert parent.get("defaultTransform")
+    assert {node.get("name") for node in walk(root)} >= {"Left Ear Rig", "Right Ear Rig"}
+    assert all(any(key == "animation" or key.startswith("animation_") for key in next(node for node in walk(root) if node.get("name") == limb))
+               for limb in ("left_arm", "right_arm", "left_leg", "right_leg"))
     walk_control = root["walkingController"]["animations"]["walking"]
     assert walk_control["movementSpeed"] == sample["walkSpeed"]
     assert walk_control["cycleDurationTicks"] < WALKING[sample["walking"]]["duration"]
